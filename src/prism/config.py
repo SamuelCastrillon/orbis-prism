@@ -20,6 +20,8 @@ ENV_LANG = "PRISM_LANG"
 # Nombres de archivo de configuración (raíz del proyecto)
 CONFIG_FILENAME = ".prism.json"
 CONFIG_KEY_JAR_PATH = "jar_path"
+CONFIG_KEY_JAR_PATH_PRERELEASE = "jar_path_prerelease"
+CONFIG_KEY_JAR_PATH_RELEASE = "jar_path_release"
 CONFIG_KEY_OUTPUT_DIR = "output_dir"
 CONFIG_KEY_JADX_PATH = "jadx_path"
 CONFIG_KEY_LANG = "lang"

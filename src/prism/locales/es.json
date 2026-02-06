@@ -9,8 +9,8 @@
   "cli.help.serve_desc": "Inicia el servidor MCP para IA.",
   "cli.help.example": "Ejemplo: python main.py init",
   "cli.init.jar_not_found": "Error: HytaleServer.jar no encontrado.",
-  "cli.init.hint_env": "  - Define HYTALE_JAR_PATH o usa: prism config set jar_path <ruta>",
-  "cli.init.hint_windows": "  - En Windows la ruta por defecto es %APPDATA%\\Hytale\\install\\...\\Server. Para otra ruta: prism config set jar_path <ruta>.",
+  "cli.init.hint_env": "  - Define HYTALE_JAR_PATH o usa: prism config set game_path <ruta>",
+  "cli.init.hint_windows": "  - En Windows la ruta por defecto es %APPDATA%\\Hytale\\install\\...\\Server. Para otra ruta: prism config set game_path <ruta>.",
   "cli.init.env_jar_invalid": "HYTALE_JAR_PATH está definida pero el archivo no existe o no es un JAR válido.",
   "cli.init.success_jar": "Listo. JAR detectado: {path}",
   "cli.init.success_config": "Config guardada en: {path}",
@@ -26,7 +26,10 @@
   "cli.help.lang_list_desc": "Lista idiomas disponibles.",
   "cli.help.lang_set_desc": "Cambia el idioma (ej: lang set en).",
   "cli.lang.set_usage": "Uso: python main.py lang set <código>",
-  "cli.help.config_set_jar_desc": "Establece manualmente la ruta a HytaleServer.jar.",
+  "cli.help.config_set_jar_desc": "Establece la ruta: solo necesitas la carpeta raíz del juego.",
+  "cli.help.config_set_jar_hint": "Cómo obtenerla: Launcher -> Settings -> Open Directory -> Copy Path.",
   "cli.config.jar_set_success": "Ruta del JAR guardada: {path}",
-  "cli.config.jar_set_invalid": "La ruta no existe o no es un JAR válido: {path}"
+  "cli.config.jar_set_invalid": "La ruta no existe o no es un JAR válido: {path}",
+  "cli.init.sibling_saved": "Otra versión detectada y guardada (release/pre-release): {path}",
+  "cli.config.hytale_root_detected": "Carpeta Hytale detectada. Versiones encontradas:"
 }

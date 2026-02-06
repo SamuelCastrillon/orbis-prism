@@ -48,9 +48,18 @@ def cmd_init(root: Path | None = None) -> int:
     jadx_path = detection.resolve_jadx_path(root)
     if jadx_path:
         cfg[config.CONFIG_KEY_JADX_PATH] = jadx_path
+    # Detección automática de la otra versión (release / pre-release)
+    sibling = detection.get_sibling_version_jar_path(jar_path)
+    if sibling:
+        if "pre-release" in str(jar_path).replace("\\", "/"):
+            cfg[config.CONFIG_KEY_JAR_PATH_RELEASE] = str(sibling.resolve())
+        else:
+            cfg[config.CONFIG_KEY_JAR_PATH_PRERELEASE] = str(sibling.resolve())
     config.save_config(cfg, root)
 
     print(i18n.t("cli.init.success_jar", path=jar_path))
+    if sibling:
+        print(i18n.t("cli.init.sibling_saved", path=sibling))
     print(i18n.t("cli.init.success_config", path=config.get_config_path(root)))
     return 0
 
@@ -88,16 +97,43 @@ def cmd_lang_list(root: Path | None = None) -> int:
 
 
 def cmd_config_set_jar_path(path_str: str, root: Path | None = None) -> int:
-    """Establece manualmente la ruta a HytaleServer.jar en la config."""
+    """Establece la ruta a HytaleServer.jar o a la carpeta raíz de Hytale (ej. %%APPDATA%%\\Hytale)."""
     root = root or config.get_project_root()
     path = Path(path_str).resolve()
+    cfg = config.load_config(root)
+
+    if path.is_dir() and detection.is_hytale_root(path):
+        release_jar, prerelease_jar = detection.find_jar_paths_from_hytale_root(path)
+        if not release_jar and not prerelease_jar:
+            print(i18n.t("cli.config.jar_set_invalid", path=path_str), file=sys.stderr)
+            return 1
+        if release_jar:
+            cfg[config.CONFIG_KEY_JAR_PATH] = str(release_jar.resolve())
+            if prerelease_jar:
+                cfg[config.CONFIG_KEY_JAR_PATH_PRERELEASE] = str(prerelease_jar.resolve())
+        else:
+            cfg[config.CONFIG_KEY_JAR_PATH] = str(prerelease_jar.resolve())
+        config.save_config(cfg, root)
+        print(i18n.t("cli.config.hytale_root_detected"))
+        if release_jar:
+            print(i18n.t("cli.init.success_jar", path=release_jar))
+        if prerelease_jar:
+            print(i18n.t("cli.init.sibling_saved", path=prerelease_jar))
+        return 0
     if not detection.is_valid_jar(path):
         print(i18n.t("cli.config.jar_set_invalid", path=path_str), file=sys.stderr)
         return 1
-    cfg = config.load_config(root)
     cfg[config.CONFIG_KEY_JAR_PATH] = str(path)
+    sibling = detection.get_sibling_version_jar_path(path)
+    if sibling:
+        if "pre-release" in str(path).replace("\\", "/"):
+            cfg[config.CONFIG_KEY_JAR_PATH_RELEASE] = str(sibling.resolve())
+        else:
+            cfg[config.CONFIG_KEY_JAR_PATH_PRERELEASE] = str(sibling.resolve())
     config.save_config(cfg, root)
     print(i18n.t("cli.config.jar_set_success", path=path))
+    if sibling:
+        print(i18n.t("cli.init.sibling_saved", path=sibling))
     return 0
 
 
@@ -130,7 +166,8 @@ def print_help() -> None:
     print("  serve      ", i18n.t("cli.help.serve_desc"))
     print("  lang list   ", i18n.t("cli.help.lang_list_desc"))
     print("  lang set <código>  ", i18n.t("cli.help.lang_set_desc"))
-    print("  config set jar_path <ruta>  ", i18n.t("cli.help.config_set_jar_desc"))
+    print("  config set game_path <ruta>  ", i18n.t("cli.help.config_set_jar_desc"))
+    print("      ", i18n.t("cli.help.config_set_jar_hint"))
     print()
     print(i18n.t("cli.help.example"))
 
@@ -148,10 +185,10 @@ def main() -> int:
     if subcommand == "init":
         return cmd_init(root)
     if subcommand == "config":
-        if len(args) >= 4 and args[1].lower() == "set" and args[2].lower() == "jar_path":
+        if len(args) >= 4 and args[1].lower() == "set" and args[2].lower() == "game_path":
             return cmd_config_set_jar_path(" ".join(args[3:]), root)
         if len(args) >= 2 and args[1].lower() == "set":
-            print("Uso: prism config set jar_path <ruta>", file=sys.stderr)
+            print("Uso: prism config set game_path <ruta>", file=sys.stderr)
             return 1
         print_help()
         return 0

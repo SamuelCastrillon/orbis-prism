@@ -9,8 +9,8 @@
   "cli.help.serve_desc": "Starts the MCP server for AI.",
   "cli.help.example": "Example: python main.py init",
   "cli.init.jar_not_found": "Error: HytaleServer.jar not found.",
-  "cli.init.hint_env": "  - Set HYTALE_JAR_PATH or use: prism config set jar_path <path>",
-  "cli.init.hint_windows": "  - On Windows the default path is %APPDATA%\\Hytale\\install\\...\\Server. For another path: prism config set jar_path <path>.",
+  "cli.init.hint_env": "  - Set HYTALE_JAR_PATH or use: prism config set game_path <path>",
+  "cli.init.hint_windows": "  - On Windows the default path is %APPDATA%\\Hytale\\install\\...\\Server. For another path: prism config set game_path <path>.",
   "cli.init.env_jar_invalid": "HYTALE_JAR_PATH is set but the file does not exist or is not a valid JAR.",
   "cli.init.success_jar": "Done. JAR detected: {path}",
   "cli.init.success_config": "Config saved to: {path}",
@@ -26,7 +26,10 @@
   "cli.help.lang_list_desc": "List available languages.",
   "cli.help.lang_set_desc": "Change the language (e.g. lang set en).",
   "cli.lang.set_usage": "Usage: python main.py lang set <code>",
-  "cli.help.config_set_jar_desc": "Set the path to HytaleServer.jar manually.",
+  "cli.help.config_set_jar_desc": "Set the path: only the game root folder is needed.",
+  "cli.help.config_set_jar_hint": "How to get it: Launcher -> Settings -> Open Directory -> Copy Path.",
   "cli.config.jar_set_success": "JAR path saved: {path}",
-  "cli.config.jar_set_invalid": "Path does not exist or is not a valid JAR: {path}"
+  "cli.config.jar_set_invalid": "Path does not exist or is not a valid JAR: {path}",
+  "cli.init.sibling_saved": "Other version detected and saved (release/pre-release): {path}",
+  "cli.config.hytale_root_detected": "Hytale folder detected. Versions found:"
 }
