@@ -27,7 +27,7 @@ def print_help() -> None:
     print(fmt.format("lang list") + i18n.t("cli.help.lang_list_desc"))
     print(fmt.format("lang set <código>") + i18n.t("cli.help.lang_set_desc"))
     print()
-    print(fmt.format("config set game_path <ruta>") + i18n.t("cli.help.config_set_jar_desc"))
+    print(fmt.format("config_impl set game_path <ruta>") + i18n.t("cli.help.config_set_jar_desc"))
     print(fmt.format("") + i18n.t("cli.help.config_set_jar_hint"))
     print()
     print(i18n.t("cli.help.example"))
