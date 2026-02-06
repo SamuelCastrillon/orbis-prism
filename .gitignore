@@ -1,0 +1,41 @@
+# Orbis Prism - archivos generados y entornos
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Workspace: no versionar descompilado ni DB ni JARs
+workspace/decompiled/
+workspace/decompiled_raw/
+workspace/db/*.db
+workspace/server/*.jar
+workspace/server/**/*.jar
+
+# Config local (puede contener rutas absolutas)
+.prism.json
+workspace/prism_config.json
+
+# Logs
+logs/*.log
+logs/
+!logs/.gitkeep
+
+# Binarios externos (JADX etc.)
+bin/jadx*
+bin/*.bat
+!bin/.gitkeep
+
+# IDE y OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
