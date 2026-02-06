@@ -69,6 +69,71 @@ def run_jadx(
         return (False, False)
 
 
+def run_decompile_only_for_version(root: Path | None, version: str) -> tuple[bool, str]:
+    """
+    Ejecuta solo JADX para una versión (release o prerelease). No ejecuta prune.
+    Escribe en decompiled_raw/<version>. Devuelve (True, "") o (False, "no_jar"|"no_jadx"|"jadx_failed").
+    """
+    root = root or config_impl.get_project_root()
+    if version == "release":
+        jar_path = config_impl.get_jar_path_release_from_config(root)
+    else:
+        jar_path = config_impl.get_jar_path_prerelease_from_config(root)
+    if jar_path is None:
+        return (False, "no_jar")
+
+    jadx_path = config_impl.get_jadx_path_from_config(root)
+    if jadx_path is None:
+        jadx_path = detection.resolve_jadx_path(root)
+    if jadx_path is None:
+        return (False, "no_jadx")
+    jadx_bin = Path(jadx_path)
+
+    raw_dir = config_impl.get_decompiled_raw_dir(root, version)
+    raw_dir.mkdir(parents=True, exist_ok=True)
+
+    logs_dir = config_impl.get_logs_dir(root)
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = logs_dir / f"decompile_{version}_{timestamp}.log"
+
+    from . import i18n
+    ok, had_errors = run_jadx(jar_path, raw_dir, jadx_bin, log_path)
+    if not ok:
+        return (False, "jadx_failed")
+    if had_errors:
+        print(i18n.t("cli.decompile.jadx_finished_with_errors"), file=sys.stderr)
+    return (True, "")
+
+
+def run_decompile_only(
+    root: Path | None = None,
+    versions: list[str] | None = None,
+) -> tuple[bool, str]:
+    """
+    Ejecuta solo JADX (sin prune) para una o más versiones. Si versions es None, usa las que tengan JAR configurado.
+    Devuelve (True, "") en éxito; (False, "no_jar"|"no_jadx"|"jadx_failed") en fallo.
+    """
+    root = root or config_impl.get_project_root()
+    if versions is None:
+        versions = []
+        if config_impl.get_jar_path_release_from_config(root):
+            versions.append("release")
+        if config_impl.get_jar_path_prerelease_from_config(root):
+            versions.append("prerelease")
+        if not versions:
+            if config_impl.get_jar_path_from_config(root):
+                versions = ["release"]
+            else:
+                return (False, "no_jar")
+
+    for version in versions:
+        ok, err = run_decompile_only_for_version(root, version)
+        if not ok:
+            return (False, err)
+    return (True, "")
+
+
 def run_decompile_and_prune_for_version(root: Path | None, version: str) -> tuple[bool, str]:
     """
     Decompile and prune a single version (release or prerelease).

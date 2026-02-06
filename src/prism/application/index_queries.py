@@ -83,7 +83,7 @@ def get_index_stats(
     version: str | None,
 ) -> tuple[dict | None, dict | None]:
     """Return ({"version", "classes", "methods"}, None) or (None, error_dict)."""
-    from .. import config as _config
+    from ..infrastructure import config_impl as _config
     from ..domain.constants import normalize_version
 
     root = root or config_provider.get_project_root()
@@ -101,7 +101,7 @@ def get_index_stats(
 
 def get_context_list(config_provider: "ConfigProvider", root: Path | None) -> dict:
     """Return {"indexed": [...], "active": "release"|"prerelease"}."""
-    from .. import config as _config
+    from ..infrastructure import config_impl as _config
     from ..domain.constants import VALID_SERVER_VERSIONS
 
     root = root or config_provider.get_project_root()
