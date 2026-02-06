@@ -24,6 +24,7 @@
   "cli.init.env_jar_invalid": "HYTALE_JAR_PATH está definida pero el archivo no existe o no es un JAR válido.",
   "cli.init.success_jar": "Listo. JAR detectado: {path}",
   "cli.init.success_config": "Config guardada en: {path}",
+  "cli.init.attempting_detect": "No hay JAR en la config. Intentando detectar HytaleServer.jar...",
   "cli.decompile.not_implemented": "Comando 'decompile' no implementado aún. Ver Fase 1 del plan.",
   "cli.decompile.success": "Descompilación completada. Código en workspace/decompiled.",
   "cli.decompile.no_jar": "No hay JAR configurado. Ejecuta 'ctx init' o 'config_impl set game_path <ruta>'.",
