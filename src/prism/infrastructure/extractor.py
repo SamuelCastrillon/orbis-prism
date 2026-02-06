@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from . import config
+from . import config_impl
 from . import db
 
 # Files processed between each commit to reduce transaction size and memory
@@ -57,15 +57,15 @@ def run_index(root: Path | None = None, version: str = "release") -> tuple[bool,
     and fill prism_api_<version>.db. Returns (True, (num_classes, num_methods));
     (False, "no_decompiled") if no code; (False, "db_error") if DB fails.
     """
-    root = root or config.get_project_root()
-    decompiled_dir = config.get_decompiled_dir(root, version)
+    root = root or config_impl.get_project_root()
+    decompiled_dir = config_impl.get_decompiled_dir(root, version)
     if not decompiled_dir.is_dir():
         return (False, "no_decompiled")
     java_files = list(decompiled_dir.rglob("*.java"))
     if not java_files:
         return (False, "no_decompiled")
 
-    db_path = config.get_db_path(root, version)
+    db_path = config_impl.get_db_path(root, version)
     try:
         with db.connection(db_path) as conn:
             db.init_schema(conn)

@@ -4,7 +4,7 @@ import sys
 import shutil
 from pathlib import Path
 
-from . import config
+from . import config_impl
 
 # Subdirectories where JADX may leave sources (version-dependent)
 PRUNE_SOURCE_CANDIDATES = (
@@ -19,7 +19,7 @@ def prune_to_core(raw_dir: Path, dest_dir: Path) -> tuple[bool, dict | None]:
     Tries raw_dir/sources/com/hypixel/hytale and raw_dir/com/hypixel/hytale.
     Returns (True, {"files": N, "source_subdir": "sources"|"."}) or (False, None) if not found.
     """
-    core_rel = config.CORE_PACKAGE_PATH  # "com/hypixel/hytale"
+    core_rel = config_impl.CORE_PACKAGE_PATH  # "com/hypixel/hytale"
     source_core = None
     source_subdir = None
     for sub in PRUNE_SOURCE_CANDIDATES:
@@ -47,9 +47,9 @@ def run_prune_only_for_version(root: Path | None, version: str) -> tuple[bool, s
     """
     from . import i18n
 
-    root = root or config.get_project_root()
-    raw_dir = config.get_decompiled_raw_dir(root, version)
-    decompiled_dir = config.get_decompiled_dir(root, version)
+    root = root or config_impl.get_project_root()
+    raw_dir = config_impl.get_decompiled_raw_dir(root, version)
+    decompiled_dir = config_impl.get_decompiled_dir(root, version)
     if not raw_dir.is_dir():
         return (False, "no_raw")
     print(i18n.t("cli.prune.running", version=version, raw_dir=raw_dir))
@@ -69,11 +69,11 @@ def run_prune_only(
     Run only the prune for one or more versions.
     If versions is None, process those that have an existing decompiled_raw folder.
     """
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     if versions is None:
         versions = [
-            v for v in config.VALID_SERVER_VERSIONS
-            if config.get_decompiled_raw_dir(root, v).is_dir()
+            v for v in config_impl.VALID_SERVER_VERSIONS
+            if config_impl.get_decompiled_raw_dir(root, v).is_dir()
         ]
         if not versions:
             return (False, "no_raw")

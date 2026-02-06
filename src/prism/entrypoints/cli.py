@@ -11,13 +11,14 @@ from ..infrastructure import extractor
 from .. import i18n
 from ..infrastructure import prune
 from ..application import search
-from ..application import get_context_list as app_get_context_list
+from ..application import get_context_list
 from ..domain.constants import VALID_SERVER_VERSIONS as DOMAIN_VALID_VERSIONS, normalize_version
-from ..infrastructure import FileConfigProvider, SqliteIndexRepository
+from ..infrastructure import file_config
+from ..infrastructure import config_impl
 
 # Flag for "all versions" in build, decompile, index
 VERSION_FLAG_ALL = ("--all", "-a")
-
+ 
 # Flags for query
 QUERY_JSON_FLAGS = ("--json", "-j")
 QUERY_LIMIT_FLAGS = ("--limit", "-n")
@@ -132,23 +133,23 @@ def _parse_version_arg(args: list[str], start_index: int) -> tuple[str | None, b
 
 def _ensure_dirs(root: Path) -> None:
     """Ensure workspace/server, decompiled, db and logs directories exist."""
-    config.get_workspace_dir(root).mkdir(parents=True, exist_ok=True)
-    (config.get_workspace_dir(root) / "server").mkdir(parents=True, exist_ok=True)
-    config.get_decompiled_dir(root).mkdir(parents=True, exist_ok=True)
-    config.get_db_dir(root).mkdir(parents=True, exist_ok=True)
+    config_impl.get_workspace_dir(root).mkdir(parents=True, exist_ok=True)
+    (config_impl.get_workspace_dir(root) / "server").mkdir(parents=True, exist_ok=True)
+    config_impl.get_decompiled_dir(root).mkdir(parents=True, exist_ok=True)
+    config_impl.get_db_dir(root).mkdir(parents=True, exist_ok=True)
     logs = root / "logs"
     logs.mkdir(parents=True, exist_ok=True)
 
 
 def cmd_init(root: Path | None = None) -> int:
     """
-    Detect HytaleServer.jar, validate and save config to .prism.json.
+    Detect HytaleServer.jar, validate and save config_impl to .prism.json.
     Create workspace directories if they do not exist.
     """
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     _ensure_dirs(root)
 
-    env_jar = os.environ.get(config.ENV_JAR_PATH)
+    env_jar = os.environ.get(config_impl.ENV_JAR_PATH)
     if env_jar:
         env_path = Path(env_jar).resolve()
         if not detection.is_valid_jar(env_path):
@@ -162,30 +163,30 @@ def cmd_init(root: Path | None = None) -> int:
         print(i18n.t("cli.init.hint_windows"), file=sys.stderr)
         return 1
 
-    cfg = config.load_config(root)
-    cfg[config.CONFIG_KEY_JAR_PATH] = str(jar_path.resolve())
-    cfg[config.CONFIG_KEY_OUTPUT_DIR] = str(config.get_workspace_dir(root).resolve())
+    cfg = config_impl.load_config_impl(root)
+    cfg[config_impl.config_impl_KEY_JAR_PATH] = str(jar_path.resolve())
+    cfg[config_impl.config_impl_KEY_OUTPUT_DIR] = str(config_impl.get_workspace_dir(root).resolve())
     jadx_path = detection.resolve_jadx_path(root)
     if jadx_path:
-        cfg[config.CONFIG_KEY_JADX_PATH] = jadx_path
+        cfg[config_impl.config_impl_KEY_JADX_PATH] = jadx_path
     sibling = detection.get_sibling_version_jar_path(jar_path)
     if sibling:
         if "pre-release" in str(jar_path).replace("\\", "/"):
-            cfg[config.CONFIG_KEY_JAR_PATH_RELEASE] = str(sibling.resolve())
+            cfg[config_impl.config_impl_KEY_JAR_PATH_RELEASE] = str(sibling.resolve())
         else:
-            cfg[config.CONFIG_KEY_JAR_PATH_PRERELEASE] = str(sibling.resolve())
-    config.save_config(cfg, root)
+            cfg[config_impl.config_impl_KEY_JAR_PATH_PRERELEASE] = str(sibling.resolve())
+    config_impl.save_config_impl(cfg, root)
 
     print(i18n.t("cli.init.success_jar", path=jar_path))
     if sibling:
         print(i18n.t("cli.init.sibling_saved", path=sibling))
-    print(i18n.t("cli.init.success_config", path=config.get_config_path(root)))
+    print(i18n.t("cli.init.success_config_impl", path=config_impl.get_config_impl_path(root)))
     return 0
 
 
 def cmd_decompile(root: Path | None = None, version: str | None = None) -> int:
     """Run JADX and prune. version=None -> all; 'release'|'prerelease' -> only that. Default (no arg) -> release."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     versions = None if version is None else [version]
     print(i18n.t("cli.decompile.may_take"))
     success, err = decompile.run_decompile_and_prune(root, versions=versions)
@@ -205,7 +206,7 @@ def cmd_query(
     output_json: bool = False,
 ) -> int:
     """Run FTS5 search on the DB for the given version. output_json: only print JSON."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     if not query_term or not query_term.strip():
         print(i18n.t("cli.query.usage"), file=sys.stderr)
         return 1
@@ -230,7 +231,7 @@ def cmd_query(
 
 def cmd_prune(root: Path | None = None, version: str | None = None) -> int:
     """Run only the prune (raw -> decompiled). version=None -> all that have raw."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     versions = None if version is None else [version]
     success, err = prune.run_prune_only(root, versions=versions)
     if success:
@@ -246,7 +247,7 @@ def cmd_prune(root: Path | None = None, version: str | None = None) -> int:
 
 def cmd_build(root: Path | None = None, version: str | None = None) -> int:
     """Run decompile and index. version=None -> all; 'release'|'prerelease' -> only that."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     versions = None if version is None else [version]
 
     print(i18n.t("cli.build.phase_decompile"))
@@ -277,7 +278,7 @@ def cmd_build(root: Path | None = None, version: str | None = None) -> int:
 
 def cmd_index(root: Path | None = None, version: str | None = None) -> int:
     """Index into the DB. version=None -> index release and prerelease."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     if version is not None and version not in DOMAIN_VALID_VERSIONS:
         print(i18n.t("cli.context.use.invalid"), file=sys.stderr)
         return 1
@@ -303,9 +304,9 @@ def cmd_index(root: Path | None = None, version: str | None = None) -> int:
 
 def cmd_context_list(root: Path | None = None) -> int:
     """List indexed versions (existing DB) and which is active."""
-    root = root or config.get_project_root()
-    _config_provider = FileConfigProvider()
-    ctx = app_get_context_list(_config_provider, root)
+    root = root or config_impl.get_project_root()
+    _config_provider = file_config_implFileConfigProvider()
+    ctx = get_context_list(_config_provider, root)
     installed = ctx["indexed"]
     active = ctx["active"]
     print(i18n.t("cli.context.list.title"))
@@ -321,15 +322,15 @@ def cmd_context_list(root: Path | None = None) -> int:
 
 def cmd_context_use(version_str: str, root: Path | None = None) -> int:
     """Set the active version (release or prerelease)."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     version = version_str.strip().lower()
     if version not in DOMAIN_VALID_VERSIONS:
         print(i18n.t("cli.context.use.invalid"), file=sys.stderr)
         return 1
-    cfg = config.load_config(root)
-    cfg[config.CONFIG_KEY_ACTIVE_SERVER] = version
-    config.save_config(cfg, root)
-    if not config.get_db_path(root, version).is_file():
+    cfg = config_impl.load_config_impl(root)
+    cfg[config_impl.config_impl_KEY_ACTIVE_SERVER] = version
+    config_impl.save_config_impl(cfg, root)
+    if not config_impl.get_db_path(root, version).is_file():
         print(i18n.t("cli.context.use.not_indexed", version=version), file=sys.stderr)
     print(i18n.t("cli.context.use.success", version=version))
     return 0
@@ -342,7 +343,7 @@ def cmd_mcp(
     port: int = 8000,
 ) -> int:
     """Start the MCP server for AI. Default stdio; with transport streamable-http listens on host:port."""
-    root = _root or config.get_project_root()
+    root = _root or config_impl.get_project_root()
     if sys.stderr.isatty():
         if transport == "streamable-http":
             print(i18n.t("cli.mcp.instructions_http_title"), file=sys.stderr)
@@ -371,7 +372,7 @@ def cmd_mcp(
 
 def cmd_lang_list(root: Path | None = None) -> int:
     """List available languages and mark the current one."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     current = i18n.get_current_locale(root)
     locales = i18n.get_available_locales()
     print(i18n.t("lang.list.header"))
@@ -383,42 +384,42 @@ def cmd_lang_list(root: Path | None = None) -> int:
     return 0
 
 
-def cmd_config_set_jar_path(path_str: str, root: Path | None = None) -> int:
+def cmd_config_impl_set_jar_path(path_str: str, root: Path | None = None) -> int:
     """Set the path to HytaleServer.jar or to the Hytale root folder."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     path = Path(path_str).resolve()
-    cfg = config.load_config(root)
+    cfg = config_impl.load_config_impl(root)
 
     if path.is_dir() and detection.is_hytale_root(path):
         release_jar, prerelease_jar = detection.find_jar_paths_from_hytale_root(path)
         if not release_jar and not prerelease_jar:
-            print(i18n.t("cli.config.jar_set_invalid", path=path_str), file=sys.stderr)
+            print(i18n.t("cli.config_impl.jar_set_invalid", path=path_str), file=sys.stderr)
             return 1
         if release_jar:
-            cfg[config.CONFIG_KEY_JAR_PATH] = str(release_jar.resolve())
+            cfg[config_impl.config_impl_KEY_JAR_PATH] = str(release_jar.resolve())
             if prerelease_jar:
-                cfg[config.CONFIG_KEY_JAR_PATH_PRERELEASE] = str(prerelease_jar.resolve())
+                cfg[config_impl.config_impl_KEY_JAR_PATH_PRERELEASE] = str(prerelease_jar.resolve())
         else:
-            cfg[config.CONFIG_KEY_JAR_PATH] = str(prerelease_jar.resolve())
-        config.save_config(cfg, root)
-        print(i18n.t("cli.config.hytale_root_detected"))
+            cfg[config_impl.config_impl_KEY_JAR_PATH] = str(prerelease_jar.resolve())
+        config_impl.save_config_impl(cfg, root)
+        print(i18n.t("cli.config_impl.hytale_root_detected"))
         if release_jar:
             print(i18n.t("cli.init.success_jar", path=release_jar))
         if prerelease_jar:
             print(i18n.t("cli.init.sibling_saved", path=prerelease_jar))
         return 0
     if not detection.is_valid_jar(path):
-        print(i18n.t("cli.config.jar_set_invalid", path=path_str), file=sys.stderr)
+        print(i18n.t("cli.config_impl.jar_set_invalid", path=path_str), file=sys.stderr)
         return 1
-    cfg[config.CONFIG_KEY_JAR_PATH] = str(path)
+    cfg[config_impl.config_impl_KEY_JAR_PATH] = str(path)
     sibling = detection.get_sibling_version_jar_path(path)
     if sibling:
         if "pre-release" in str(path).replace("\\", "/"):
-            cfg[config.CONFIG_KEY_JAR_PATH_RELEASE] = str(sibling.resolve())
+            cfg[config_impl.config_impl_KEY_JAR_PATH_RELEASE] = str(sibling.resolve())
         else:
-            cfg[config.CONFIG_KEY_JAR_PATH_PRERELEASE] = str(sibling.resolve())
-    config.save_config(cfg, root)
-    print(i18n.t("cli.config.jar_set_success", path=path))
+            cfg[config_impl.config_impl_KEY_JAR_PATH_PRERELEASE] = str(sibling.resolve())
+    config_impl.save_config_impl(cfg, root)
+    print(i18n.t("cli.config_impl.jar_set_success", path=path))
     if sibling:
         print(i18n.t("cli.init.sibling_saved", path=sibling))
     return 0
@@ -426,7 +427,7 @@ def cmd_config_set_jar_path(path_str: str, root: Path | None = None) -> int:
 
 def cmd_lang_set(lang_code: str, root: Path | None = None) -> int:
     """Change the language saved in .prism.json."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     code = lang_code.strip().lower()
     if not code:
         print(i18n.t("lang.set.invalid", lang=lang_code), file=sys.stderr)
@@ -434,9 +435,9 @@ def cmd_lang_set(lang_code: str, root: Path | None = None) -> int:
     if not i18n.is_locale_available(code):
         print(i18n.t("lang.set.invalid", lang=code), file=sys.stderr)
         return 1
-    cfg = config.load_config(root)
-    cfg[config.CONFIG_KEY_LANG] = code
-    config.save_config(cfg, root)
+    cfg = config_impl.load_config_impl(root)
+    cfg[config_impl.config_impl_KEY_LANG] = code
+    config_impl.save_config_impl(cfg, root)
     print(i18n.t("lang.set.success", lang=code))
     return 0
 
@@ -463,8 +464,8 @@ def print_help() -> None:
     print(fmt.format("lang list") + i18n.t("cli.help.lang_list_desc"))
     print(fmt.format("lang set <código>") + i18n.t("cli.help.lang_set_desc"))
     print()
-    print(fmt.format("config set game_path <ruta>") + i18n.t("cli.help.config_set_jar_desc"))
-    print(fmt.format("") + i18n.t("cli.help.config_set_jar_hint"))
+    print(fmt.format("config_impl set game_path <ruta>") + i18n.t("cli.help.config_impl_set_jar_desc"))
+    print(fmt.format("") + i18n.t("cli.help.config_impl_set_jar_hint"))
     print()
     print(i18n.t("cli.help.example"))
 
@@ -477,15 +478,15 @@ def main() -> int:
         return 0
 
     subcommand = args[0].lower()
-    root = config.get_project_root()
+    root = config_impl.get_project_root()
 
     if subcommand == "init":
         return cmd_init(root)
-    if subcommand == "config":
+    if subcommand == "config_impl":
         if len(args) >= 4 and args[1].lower() == "set" and args[2].lower() == "game_path":
-            return cmd_config_set_jar_path(" ".join(args[3:]), root)
+            return cmd_config_impl_set_jar_path(" ".join(args[3:]), root)
         if len(args) >= 2 and args[1].lower() == "set":
-            print("Uso: prism config set game_path <ruta>", file=sys.stderr)
+            print("Uso: prism config_impl set game_path <ruta>", file=sys.stderr)
             return 1
         print_help()
         return 0

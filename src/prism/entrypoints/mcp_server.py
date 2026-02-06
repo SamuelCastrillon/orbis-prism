@@ -15,7 +15,8 @@ from ..application import (
     search_api as app_search_api,
 )
 from ..domain.constants import normalize_version
-from ..infrastructure import FileConfigProvider, SqliteIndexRepository
+from ..infrastructure.file_config import FileConfigProvider
+from ..infrastructure.sqlite_repository import SqliteIndexRepository
 
 _config_provider = FileConfigProvider()
 _index_repository = SqliteIndexRepository()

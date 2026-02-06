@@ -8,7 +8,7 @@ from pathlib import Path
 _root = Path(__file__).resolve().parent
 sys.path.insert(0, str(_root / "src"))
 
-from prism.cli import main
+from src.prism.entrypoints import main
 
 if __name__ == "__main__":
     sys.exit(main())

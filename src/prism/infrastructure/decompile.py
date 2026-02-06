@@ -5,7 +5,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from . import config
+from . import config_impl
 from . import detection
 from . import prune
 
@@ -74,27 +74,27 @@ def run_decompile_and_prune_for_version(root: Path | None, version: str) -> tupl
     Decompile and prune a single version (release or prerelease).
     Returns (True, "") or (False, "no_jar"|"no_jadx"|"jadx_failed").
     """
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     if version == "release":
-        jar_path = config.get_jar_path_release_from_config(root)
+        jar_path = config_impl.get_jar_path_release_from_config(root)
     else:
-        jar_path = config.get_jar_path_prerelease_from_config(root)
+        jar_path = config_impl.get_jar_path_prerelease_from_config(root)
     if jar_path is None:
         return (False, "no_jar")
 
-    jadx_path = config.get_jadx_path_from_config(root)
+    jadx_path = config_impl.get_jadx_path_from_config(root)
     if jadx_path is None:
         jadx_path = detection.resolve_jadx_path(root)
     if jadx_path is None:
         return (False, "no_jadx")
     jadx_bin = Path(jadx_path)
 
-    raw_dir = config.get_decompiled_raw_dir(root, version)
-    decompiled_dir = config.get_decompiled_dir(root, version)
+    raw_dir = config_impl.get_decompiled_raw_dir(root, version)
+    decompiled_dir = config_impl.get_decompiled_dir(root, version)
     raw_dir.mkdir(parents=True, exist_ok=True)
     decompiled_dir.mkdir(parents=True, exist_ok=True)
 
-    logs_dir = config.get_logs_dir(root)
+    logs_dir = config_impl.get_logs_dir(root)
     logs_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_path = logs_dir / f"decompile_{version}_{timestamp}.log"
@@ -125,16 +125,16 @@ def run_decompile_and_prune(
     and decompile to release.
     Returns (True, "") on success; (False, "no_jar"|"no_jadx"|"jadx_failed") on failure.
     """
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
     if versions is None:
         versions = []
-        if config.get_jar_path_release_from_config(root):
+        if config_impl.get_jar_path_release_from_config(root):
             versions.append("release")
-        if config.get_jar_path_prerelease_from_config(root):
+        if config_impl.get_jar_path_prerelease_from_config(root):
             versions.append("prerelease")
         if not versions:
             # Compatibility: single JAR in jar_path -> decompile to release
-            if config.get_jar_path_from_config(root):
+            if config_impl.get_jar_path_from_config(root):
                 versions = ["release"]
             else:
                 return (False, "no_jar")

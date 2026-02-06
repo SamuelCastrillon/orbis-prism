@@ -5,7 +5,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from . import config
+from . import config_impl
 
 
 def is_valid_jar(path: Path) -> bool:
@@ -28,8 +28,8 @@ def _is_valid_jar(path: Path) -> bool:
         return False
 
 
-_RELATIVE_SERVER_JAR = ("install", "release", "package", "game", "latest", "Server", config.HYTALE_JAR_NAME)
-_RELATIVE_SERVER_JAR_PRERELEASE = ("install", "pre-release", "package", "game", "latest", "Server", config.HYTALE_JAR_NAME)
+_RELATIVE_SERVER_JAR = ("install", "release", "package", "game", "latest", "Server", config_impl.HYTALE_JAR_NAME)
+_RELATIVE_SERVER_JAR_PRERELEASE = ("install", "pre-release", "package", "game", "latest", "Server", config_impl.HYTALE_JAR_NAME)
 
 
 def find_jar_paths_from_hytale_root(hytale_root: Path) -> tuple[Path | None, Path | None]:
@@ -91,7 +91,7 @@ def get_sibling_version_jar_path(jar_path: Path) -> Path | None:
     return None
 
 
-def find_jar_in_dir(directory: Path, jar_name: str = config.HYTALE_JAR_NAME) -> Path | None:
+def find_jar_in_dir(directory: Path, jar_name: str = config_impl.HYTALE_JAR_NAME) -> Path | None:
     """Busca el JAR en un directorio (y un nivel de subcarpetas)."""
     if not directory.is_dir():
         return None
@@ -108,7 +108,7 @@ def find_jar_in_dir(directory: Path, jar_name: str = config.HYTALE_JAR_NAME) -> 
 
 def resolve_jadx_path(root: Path | None = None) -> str | None:
     """Resuelve la ruta del ejecutable JADX. Orden: JADX_PATH -> bin/jadx en root -> which('jadx')."""
-    root = root or config.get_project_root()
+    root = root or config_impl.get_project_root()
 
     def _check_path(p: Path) -> str | None:
         if p.is_file():
@@ -120,7 +120,7 @@ def resolve_jadx_path(root: Path | None = None) -> str | None:
                     return str(candidate.resolve())
         return None
 
-    env_path = os.environ.get(config.ENV_JADX_PATH)
+    env_path = os.environ.get(config_impl.ENV_JADX_PATH)
     if env_path:
         result = _check_path(Path(env_path).resolve())
         if result:
@@ -139,10 +139,10 @@ def resolve_jadx_path(root: Path | None = None) -> str | None:
 
 def find_and_validate_jar(root: Path | None = None) -> Path | None:
     """Infiere la ruta de HytaleServer.jar: env, config, path estándar Windows."""
-    root = root or config.get_project_root()
-    jar_name = config.HYTALE_JAR_NAME
+    root = root or config_impl.get_project_root()
+    jar_name = config_impl.HYTALE_JAR_NAME
 
-    env_path = os.environ.get(config.ENV_JAR_PATH)
+    env_path = os.environ.get(config_impl.ENV_JAR_PATH)
     if env_path:
         p = Path(env_path).resolve()
         if p.is_dir() and is_hytale_root(p):
@@ -154,7 +154,7 @@ def find_and_validate_jar(root: Path | None = None) -> Path | None:
         elif _is_valid_jar(p):
             return p
 
-    saved = config.get_jar_path_from_config(root)
+    saved = config_impl.get_jar_path_from_config(root)
     if saved and _is_valid_jar(saved):
         return saved
 

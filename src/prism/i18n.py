@@ -4,7 +4,7 @@ import os
 import json
 from pathlib import Path
 
-from . import config
+from .infrastructure import config_impl
 
 # Default code when there is no config or env
 DEFAULT_LOCALE = "es"
@@ -39,8 +39,8 @@ def get_current_locale(root: Path | None = None) -> str:
     Get current locale: config .prism.json -> PRISM_LANG -> LANG -> es.
     Normalises to short code (es, en).
     """
-    cfg = config.load_config(root)
-    lang = cfg.get(config.CONFIG_KEY_LANG)
+    cfg = config_impl.load_config(root)
+    lang = cfg.get(config_impl.CONFIG_KEY_LANG)
     if lang:
         return _normalize_locale(lang)
     env = os.environ.get("PRISM_LANG") or os.environ.get("LANG", "")
@@ -60,7 +60,7 @@ def t(key: str, **kwargs: str) -> str:
     Translate the key to the current locale. If the value is empty, use the one from es.
     kwargs replaces {name} placeholders in the string.
     """
-    root = config.get_project_root()
+    root = config_impl.get_project_root()
     locale = get_current_locale(root)
     catalog = _load_catalog(locale)
     fallback = _load_catalog(DEFAULT_LOCALE) if locale != DEFAULT_LOCALE else None
