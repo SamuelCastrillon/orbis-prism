@@ -6,6 +6,9 @@ from pathlib import Path
 from . import config
 from . import db
 
+# Archivos procesados entre cada commit para reducir tamaño de transacción y memoria
+BATCH_COMMIT_FILES = 1000
+
 # Mismas regex que Server/Scripts/generate_api_context.py
 RE_PACKAGE = re.compile(r"package\s+([\w\.]+);")
 RE_CLASS = re.compile(r"public\s+(class|interface|record|enum)\s+(\w+)")
@@ -71,6 +74,7 @@ def run_index(root: Path | None = None, version: str = "release") -> tuple[bool,
         return (False, "db_error")
 
     try:
+        files_processed = 0
         for jpath in java_files:
             try:
                 content = jpath.read_text(encoding="utf-8", errors="replace")
@@ -103,6 +107,9 @@ def run_index(root: Path | None = None, version: str = "release") -> tuple[bool,
                         m["returns"],
                         m["params"],
                     )
+            files_processed += 1
+            if files_processed % BATCH_COMMIT_FILES == 0:
+                conn.commit()
         conn.commit()
         stats = db.get_stats(conn)
         conn.close()
