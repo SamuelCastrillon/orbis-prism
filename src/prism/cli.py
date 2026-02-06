@@ -1,5 +1,6 @@
 # CLI Orbis Prism: subcomandos init, decompile, index, serve, lang.
 
+import os
 import sys
 from pathlib import Path
 
@@ -26,6 +27,14 @@ def cmd_init(root: Path | None = None) -> int:
     root = root or config.get_project_root()
     _ensure_dirs(root)
 
+    # Si HYTALE_JAR_PATH está definida, validar primero y dar mensaje específico si falla
+    env_jar = os.environ.get(config.ENV_JAR_PATH)
+    if env_jar:
+        env_path = Path(env_jar).resolve()
+        if not detection.is_valid_jar(env_path):
+            print(i18n.t("cli.init.env_jar_invalid"), file=sys.stderr)
+            return 1
+
     jar_path = detection.find_and_validate_jar(root)
     if jar_path is None:
         print(i18n.t("cli.init.jar_not_found"), file=sys.stderr)
@@ -36,6 +45,9 @@ def cmd_init(root: Path | None = None) -> int:
     cfg = config.load_config(root)
     cfg[config.CONFIG_KEY_JAR_PATH] = str(jar_path.resolve())
     cfg[config.CONFIG_KEY_OUTPUT_DIR] = str(config.get_workspace_dir(root).resolve())
+    jadx_path = detection.resolve_jadx_path(root)
+    if jadx_path:
+        cfg[config.CONFIG_KEY_JADX_PATH] = jadx_path
     config.save_config(cfg, root)
 
     print(i18n.t("cli.init.success_jar", path=jar_path))
@@ -75,6 +87,20 @@ def cmd_lang_list(root: Path | None = None) -> int:
     return 0
 
 
+def cmd_config_set_jar_path(path_str: str, root: Path | None = None) -> int:
+    """Establece manualmente la ruta a HytaleServer.jar en la config."""
+    root = root or config.get_project_root()
+    path = Path(path_str).resolve()
+    if not detection.is_valid_jar(path):
+        print(i18n.t("cli.config.jar_set_invalid", path=path_str), file=sys.stderr)
+        return 1
+    cfg = config.load_config(root)
+    cfg[config.CONFIG_KEY_JAR_PATH] = str(path)
+    config.save_config(cfg, root)
+    print(i18n.t("cli.config.jar_set_success", path=path))
+    return 0
+
+
 def cmd_lang_set(lang_code: str, root: Path | None = None) -> int:
     """Cambia el idioma guardado en .prism.json."""
     root = root or config.get_project_root()
@@ -104,6 +130,7 @@ def print_help() -> None:
     print("  serve      ", i18n.t("cli.help.serve_desc"))
     print("  lang list   ", i18n.t("cli.help.lang_list_desc"))
     print("  lang set <código>  ", i18n.t("cli.help.lang_set_desc"))
+    print("  config set jar_path <ruta>  ", i18n.t("cli.help.config_set_jar_desc"))
     print()
     print(i18n.t("cli.help.example"))
 
@@ -120,6 +147,14 @@ def main() -> int:
 
     if subcommand == "init":
         return cmd_init(root)
+    if subcommand == "config":
+        if len(args) >= 4 and args[1].lower() == "set" and args[2].lower() == "jar_path":
+            return cmd_config_set_jar_path(" ".join(args[3:]), root)
+        if len(args) >= 2 and args[1].lower() == "set":
+            print("Uso: prism config set jar_path <ruta>", file=sys.stderr)
+            return 1
+        print_help()
+        return 0
     if subcommand == "decompile":
         return cmd_decompile(root)
     if subcommand == "index":

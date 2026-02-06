@@ -1,10 +1,16 @@
 # Detección de HytaleServer.jar: env, rutas estándar Windows y validación.
 
 import os
+import shutil
 import zipfile
 from pathlib import Path
 
 from . import config
+
+
+def is_valid_jar(path: Path) -> bool:
+    """Comprueba que el archivo existe y es un JAR válido (público, para uso en CLI)."""
+    return _is_valid_jar(path)
 
 
 def _is_valid_jar(path: Path) -> bool:
@@ -24,22 +30,13 @@ def _is_valid_jar(path: Path) -> bool:
 
 
 def _search_standard_paths() -> list[Path]:
-    """Rutas estándar donde puede estar Hytale (Windows)."""
+    """Ruta de instalación oficial en Windows (Roaming): %APPDATA%\\Hytale\\install\\...\\Server."""
     candidates: list[Path] = []
-    local_app = os.environ.get("LOCALAPPDATA")
-    if local_app:
-        base = Path(local_app)
-        # Nombres típicos de carpeta de Hytale
-        for name in ("Hytale", "Hypixel", "HytaleServer"):
-            folder = base / name
-            if folder.is_dir():
-                candidates.append(folder)
-        # Subcarpetas comunes
-        for parent in (base, base / "Programs"):
-            if parent.is_dir():
-                for child in parent.iterdir():
-                    if child.is_dir() and "hytale" in child.name.lower():
-                        candidates.append(child)
+    appdata = os.environ.get("APPDATA")
+    if appdata:
+        server_install = Path(appdata) / "Hytale" / "install" / "release" / "package" / "game" / "latest" / "Server"
+        if server_install.is_dir():
+            candidates.append(server_install)
     return candidates
 
 
@@ -59,17 +56,53 @@ def find_jar_in_dir(directory: Path, jar_name: str = config.HYTALE_JAR_NAME) -> 
     return None
 
 
+def resolve_jadx_path(root: Path | None = None) -> str | None:
+    """
+    Resuelve la ruta del ejecutable JADX para guardar en config.
+    Orden: JADX_PATH -> bin/jadx o bin/jadx.bat en raíz -> which('jadx').
+    Devuelve la ruta como string o None si no se encuentra.
+    """
+    root = root or config.get_project_root()
+
+    def _check_path(p: Path) -> str | None:
+        if p.is_file():
+            return str(p.resolve())
+        if p.is_dir():
+            for name in ("jadx", "jadx.bat", "jadx.cmd"):
+                candidate = p / name
+                if candidate.is_file():
+                    return str(candidate.resolve())
+        return None
+
+    # 1. Variable de entorno
+    env_path = os.environ.get(config.ENV_JADX_PATH)
+    if env_path:
+        result = _check_path(Path(env_path).resolve())
+        if result:
+            return result
+    # 2. bin/ en la raíz del proyecto
+    bin_dir = root / "bin"
+    if bin_dir.is_dir():
+        for name in ("jadx", "jadx.bat", "jadx.cmd"):
+            candidate = bin_dir / name
+            if candidate.is_file():
+                return str(candidate.resolve())
+    # 3. which('jadx')
+    jadx = shutil.which("jadx")
+    if jadx:
+        return jadx
+    return None
+
+
 def find_and_validate_jar(root: Path | None = None) -> Path | None:
     """
     Inferencia de ruta de HytaleServer.jar:
     1. Variable HYTALE_JAR_PATH
-    2. Config guardada (jar_path)
-    3. workspace/server/
-    4. Rutas estándar Windows (LOCALAPPDATA)
+    2. Config guardada (jar_path; ver prism config set jar_path)
+    3. Ruta estándar Windows: %APPDATA%\\Hytale\\install\\...\\Server
     Devuelve Path del JAR válido o None.
     """
     root = root or config.get_project_root()
-    workspace = config.get_workspace_dir(root)
     jar_name = config.HYTALE_JAR_NAME
 
     # 1. Variable de entorno
@@ -85,12 +118,7 @@ def find_and_validate_jar(root: Path | None = None) -> Path | None:
     if saved and _is_valid_jar(saved):
         return saved
 
-    # 3. workspace/server/
-    server_jar = find_jar_in_dir(workspace / "server", jar_name)
-    if server_jar and _is_valid_jar(server_jar):
-        return server_jar
-
-    # 4. Rutas estándar
+    # 3. Ruta estándar (APPDATA)
     for candidate_dir in _search_standard_paths():
         found = find_jar_in_dir(candidate_dir, jar_name)
         if found and _is_valid_jar(found):

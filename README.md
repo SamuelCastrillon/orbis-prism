@@ -10,7 +10,7 @@
 
 ## ✨ Características Principales
 
-- **Auto-Detection:** Localiza automáticamente la instalación de Hytale en rutas estándar de Windows (`%LOCALAPPDATA%`).
+- **Auto-Detection:** Localiza la instalación oficial en Windows (`%APPDATA%\Hytale\install\...\Server`). Puedes sobrescribir la ruta con `prism config set jar_path <ruta>`.
 - **Prism Pipeline:** Descompilación quirúrgica usando JADX, eliminando librerías de terceros y centrándose exclusivamente en `com.hypixel.hytale`.
 - **Deep Indexing:** Genera una base de datos SQLite con búsqueda de texto completo (FTS5) sobre más de 200k firmas de métodos y clases.
 - **AI-Ready (MCP):** Servidor integrado de Model Context Protocol para que agentes como Claude o Cursor naveguen por la API sin alucinaciones.
@@ -21,6 +21,10 @@
 - **Python 3.11+**
 - **Java 25** (Para compatibilidad con el servidor de Hytale)
 - **JADX** (Incluido en `/bin` o disponible en el PATH)
+
+### Dónde se detecta HytaleServer.jar
+- **Windows:** Por defecto se usa la instalación oficial en `%APPDATA%\Hytale\install\release\package\game\latest\Server`. Ejecuta `prism init` para detectarla.
+- **Ruta manual:** Para usar otra ruta: `prism config set jar_path <ruta>` o define la variable de entorno `HYTALE_JAR_PATH`.
 
 ### Instalación
 1. Clona el repositorio:

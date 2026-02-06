@@ -9,8 +9,9 @@
   "cli.help.serve_desc": "Starts the MCP server for AI.",
   "cli.help.example": "Example: python main.py init",
   "cli.init.jar_not_found": "Error: HytaleServer.jar not found.",
-  "cli.init.hint_env": "  - Set HYTALE_JAR_PATH or place the JAR in workspace/server/",
-  "cli.init.hint_windows": "  - On Windows, standard paths under %LOCALAPPDATA% are also searched.",
+  "cli.init.hint_env": "  - Set HYTALE_JAR_PATH or use: prism config set jar_path <path>",
+  "cli.init.hint_windows": "  - On Windows the default path is %APPDATA%\\Hytale\\install\\...\\Server. For another path: prism config set jar_path <path>.",
+  "cli.init.env_jar_invalid": "HYTALE_JAR_PATH is set but the file does not exist or is not a valid JAR.",
   "cli.init.success_jar": "Done. JAR detected: {path}",
   "cli.init.success_config": "Config saved to: {path}",
   "cli.decompile.not_implemented": "Command 'decompile' not implemented yet. See Phase 1 of the plan.",
@@ -24,5 +25,8 @@
   "lang.set.invalid": "Invalid or unavailable language: {lang}",
   "cli.help.lang_list_desc": "List available languages.",
   "cli.help.lang_set_desc": "Change the language (e.g. lang set en).",
-  "cli.lang.set_usage": "Usage: python main.py lang set <code>"
+  "cli.lang.set_usage": "Usage: python main.py lang set <code>",
+  "cli.help.config_set_jar_desc": "Set the path to HytaleServer.jar manually.",
+  "cli.config.jar_set_success": "JAR path saved: {path}",
+  "cli.config.jar_set_invalid": "Path does not exist or is not a valid JAR: {path}"
 }

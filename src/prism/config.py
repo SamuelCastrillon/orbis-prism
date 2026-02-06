@@ -79,6 +79,16 @@ def get_jar_path_from_config(root: Path | None = None) -> Path | None:
     return p if p.is_file() else None
 
 
+def get_jadx_path_from_config(root: Path | None = None) -> Path | None:
+    """Obtiene la ruta de JADX desde la config. None si no está o no es ejecutable."""
+    cfg = load_config(root)
+    raw = cfg.get(CONFIG_KEY_JADX_PATH)
+    if not raw:
+        return None
+    p = Path(raw).resolve()
+    return p if p.is_file() else None
+
+
 def get_decompiled_dir(root: Path | None = None) -> Path:
     """Directorio de salida descompilada (solo núcleo Hytale)."""
     return get_workspace_dir(root) / "decompiled"
