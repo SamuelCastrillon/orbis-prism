@@ -81,4 +81,7 @@ def prism_search(
 
 def run() -> None:
     """Arranca el servidor MCP por stdio (bloquea hasta que el cliente desconecte)."""
-    mcp.run()
+    try:
+        mcp.run()
+    except KeyboardInterrupt:
+        pass  # Salida limpia al cerrar (Ctrl+C o cliente desconecta)

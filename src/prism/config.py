@@ -16,6 +16,8 @@ ENV_JAR_PATH = "HYTALE_JAR_PATH"
 ENV_OUTPUT_DIR = "PRISM_OUTPUT_DIR"
 ENV_JADX_PATH = "JADX_PATH"
 ENV_LANG = "PRISM_LANG"
+# Raíz del proyecto cuando se lanza desde MCP/Docker (evita depender solo de cwd)
+ENV_WORKSPACE = "PRISM_WORKSPACE"
 
 # Nombres de archivo de configuración (raíz del proyecto)
 CONFIG_FILENAME = ".prism.json"
@@ -33,6 +35,11 @@ VALID_SERVER_VERSIONS = ("release", "prerelease")
 
 def get_project_root() -> Path:
     """Raíz del proyecto: carpeta que contiene main.py / .prism.json (o src)."""
+    env_root = os.environ.get(ENV_WORKSPACE)
+    if env_root:
+        p = Path(env_root).resolve()
+        if p.is_dir():
+            return p
     # Si estamos en src/prism/, subir dos niveles
     current = Path(__file__).resolve().parent
     if (current / ".." / ".." / "main.py").resolve().exists():

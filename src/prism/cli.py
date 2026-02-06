@@ -315,18 +315,23 @@ def cmd_context_use(version_str: str, root: Path | None = None) -> int:
 def cmd_mcp(_root: Path | None = None) -> int:
     """Inicia el servidor MCP para IA (Fase 3). Bloquea hasta que el cliente desconecte."""
     root = _root or config.get_project_root()
-    cwd = str(root.resolve())
-    command = sys.executable
-    args_str = "main.py mcp"
-    print(i18n.t("cli.mcp.instructions_title"), file=sys.stderr)
-    print(i18n.t("cli.mcp.instructions_intro"), file=sys.stderr)
-    print(i18n.t("cli.mcp.instructions_command", command=command), file=sys.stderr)
-    print(i18n.t("cli.mcp.instructions_args", args=args_str), file=sys.stderr)
-    print(i18n.t("cli.mcp.instructions_cwd", cwd=cwd), file=sys.stderr)
-    print(i18n.t("cli.mcp.instructions_ready"), file=sys.stderr)
+    # Solo mostrar instrucciones si stderr es una terminal (ej. usuario ejecutó a mano).
+    # Cuando Cursor lanza el proceso por stdio, stderr no es TTY y no imprimimos, para no interferir.
+    if sys.stderr.isatty():
+        cwd = str(root.resolve())
+        command = sys.executable
+        args_str = "main.py mcp"
+        print(i18n.t("cli.mcp.instructions_title"), file=sys.stderr)
+        print(i18n.t("cli.mcp.instructions_intro"), file=sys.stderr)
+        print(i18n.t("cli.mcp.instructions_command", command=command), file=sys.stderr)
+        print(i18n.t("cli.mcp.instructions_args", args=args_str), file=sys.stderr)
+        print(i18n.t("cli.mcp.instructions_cwd", cwd=cwd), file=sys.stderr)
+        print(i18n.t("cli.mcp.instructions_ready"), file=sys.stderr)
     from . import mcp_server
     try:
         mcp_server.run()
+        return 0
+    except KeyboardInterrupt:
         return 0
     except Exception as e:
         print(i18n.t("cli.query.error", msg=str(e)), file=sys.stderr)

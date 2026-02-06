@@ -74,13 +74,24 @@
 
 El servidor MCP usa **transporte stdio** (no abre ningún puerto). Tu cliente (Cursor, Claude Desktop, etc.) debe ejecutar el proceso y comunicarse por stdin/stdout.
 
-1. **Ejecuta una vez** `python main.py mcp`: en la consola se imprimirán el comando, los argumentos y el directorio de trabajo que debes usar.
-2. **En Cursor**: Settings → MCP → Add new server (o edita la configuración MCP). Añade un servidor con:
-   - **Transport**: stdio
-   - **Command**: la ruta de tu Python (p. ej. `python` o la que mostró el comando)
-   - **Arguments**: `main.py mcp`
-   - **Working directory (cwd)**: la ruta absoluta de la carpeta del proyecto (la que se muestra al ejecutar `prism mcp`)
-3. Reinicia o recarga el cliente MCP para que detecte el tool `prism_search` (búsqueda en la API indexada de Hytale).
+1. **Ejecuta una vez** `python main.py mcp` en la carpeta del proyecto: si la salida es una terminal, se mostrarán comando, argumentos y directorio de trabajo.
+2. **En Cursor** edita la configuración MCP (p. ej. `~/.cursor/mcp.json`) y añade un bloque como este (ajusta las rutas):
+
+   ```json
+   "orbis-prism": {
+     "type": "stdio",
+     "command": "python",
+     "args": ["C:\\ruta\\absoluta\\a\\orbis-prism\\main.py", "mcp"],
+     "cwd": "C:\\ruta\\absoluta\\a\\orbis-prism",
+     "env": {
+       "PRISM_WORKSPACE": "C:\\ruta\\absoluta\\a\\orbis-prism"
+     }
+   }
+   ```
+
+   - **cwd** es necesario para que el servidor encuentre `.prism.json` y `workspace/db`.
+   - **env.PRISM_WORKSPACE** (opcional): si está definido, el servidor usa esta ruta como raíz del proyecto aunque el proceso se lance desde otro directorio.
+3. Recarga la ventana de Cursor (Ctrl+Shift+P → "Developer: Reload Window") para que detecte el tool `prism_search`.
 
 ## 📜 License
 This project is licensed under the MIT License. See the `LICENSE` file for more details.
