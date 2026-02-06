@@ -5,8 +5,6 @@ import os
 import sys
 from pathlib import Path
 
-import sqlite3
-
 from . import config
 from . import db
 from . import decompile
@@ -14,6 +12,7 @@ from . import detection
 from . import extractor
 from . import i18n
 from . import prune
+from . import search
 
 # Flag para "todas las versiones" en build, decompile, index
 VERSION_FLAG_ALL = ("--all", "-a")
@@ -160,43 +159,18 @@ def cmd_query(
     if version not in config.VALID_SERVER_VERSIONS:
         print(i18n.t("cli.context.use.invalid"), file=sys.stderr)
         return 1
-    db_path = config.get_db_path(root, version)
-    if not db_path.is_file():
-        print(i18n.t("cli.query.no_db", version=version), file=sys.stderr)
-        return 1
-    try:
-        conn = db.get_connection(db_path)
-        rows = db.search_fts(conn, query_term.strip(), limit=limit)
-        conn.close()
-    except sqlite3.OperationalError as e:
-        err_msg = str(e).lower()
-        if "fts5" in err_msg or "syntax" in err_msg:
-            print(i18n.t("cli.query.error", msg=str(e)), file=sys.stderr)
-            print(i18n.t("cli.query.fts5_help"), file=sys.stderr)
-        else:
-            print(i18n.t("cli.query.error", msg=str(e)), file=sys.stderr)
-        return 1
-    except Exception as e:
-        print(i18n.t("cli.query.error", msg=str(e)), file=sys.stderr)
+    results, err = search.search_api(root, version, query_term.strip(), limit=limit)
+    if err is not None:
+        print(err["message"], file=sys.stderr)
+        if err.get("hint"):
+            print(err["hint"], file=sys.stderr)
         return 1
     if output_json:
-        results = [
-            {
-                "package": r["package"],
-                "class_name": r["class_name"],
-                "kind": r["kind"],
-                "method_name": r["method_name"],
-                "returns": r["returns"],
-                "params": r["params"],
-                "file_path": r["file_path"],
-            }
-            for r in rows
-        ]
         out = {"version": version, "term": query_term.strip(), "count": len(results), "results": results}
         print(json.dumps(out, ensure_ascii=False))
         return 0
-    print(i18n.t("cli.query.result_count", count=len(rows), term=query_term, version=version))
-    for r in rows:
+    print(i18n.t("cli.query.result_count", count=len(results), term=query_term, version=version))
+    for r in results:
         print(f"  {r['package']}.{r['class_name']} ({r['kind']}) :: {r['method_name']}({r['params']}) -> {r['returns']}")
     return 0
 

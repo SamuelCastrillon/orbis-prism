@@ -1,6 +1,7 @@
 # Esquema SQLite e índice FTS5 para la API de Hytale (clases y métodos).
 
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -10,6 +11,19 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(str(db_path), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+@contextmanager
+def connection(db_path: Path):
+    """
+    Context manager: abre una conexión a la DB y la cierra al salir (incluso con excepción).
+    Uso: with db.connection(db_path) as conn: ...
+    """
+    conn = get_connection(db_path)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def init_schema(conn: sqlite3.Connection) -> None:
