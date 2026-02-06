@@ -26,7 +26,7 @@
 1. Clona el repositorio:
 
    ```bash
-   git clone https://github.com/SamuelCastrillon/orbis-prism-project.git
+   git clone https://github.com/SamuelCastrillon/orbis-prism.git
    cd orbis-prism
    
 3. Install dependencies:
