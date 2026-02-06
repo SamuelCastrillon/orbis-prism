@@ -135,25 +135,111 @@ def get_stats(conn: sqlite3.Connection) -> tuple[int, int]:
     return classes, methods
 
 
+def get_class_and_methods(
+    conn: sqlite3.Connection,
+    package: str,
+    class_name: str,
+) -> dict | None:
+    """
+    Devuelve la clase (package, class_name, kind, file_path) y todos sus métodos.
+    Cada método: method, returns, params, is_static, annotation.
+    None si la clase no existe.
+    """
+    row = conn.execute(
+        "SELECT id, package, class_name, kind, file_path FROM classes WHERE package = ? AND class_name = ?",
+        (package.strip(), class_name.strip()),
+    ).fetchone()
+    if row is None:
+        return None
+    class_id = row["id"]
+    methods_rows = conn.execute(
+        "SELECT method, returns, params, is_static, annotation FROM methods WHERE class_id = ? ORDER BY method",
+        (class_id,),
+    ).fetchall()
+    methods = [
+        {
+            "method": m["method"],
+            "returns": m["returns"],
+            "params": m["params"],
+            "is_static": bool(m["is_static"]),
+            "annotation": m["annotation"],
+        }
+        for m in methods_rows
+    ]
+    return {
+        "package": row["package"],
+        "class_name": row["class_name"],
+        "kind": row["kind"],
+        "file_path": row["file_path"],
+        "methods": methods,
+    }
+
+
+def list_classes(
+    conn: sqlite3.Connection,
+    package_prefix: str,
+    prefix_match: bool = True,
+) -> list[dict]:
+    """
+    Lista clases por paquete exacto o por prefijo.
+    Si prefix_match es True, package_prefix se usa como prefijo (package = X OR package LIKE X.%).
+    Si es False, solo package = package_prefix.
+    Devuelve lista de dict con package, class_name, kind, file_path.
+    """
+    p = package_prefix.strip()
+    if not p:
+        return []
+    if prefix_match:
+        pattern = p if p.endswith(".") else f"{p}."
+        cur = conn.execute(
+            """SELECT package, class_name, kind, file_path FROM classes
+               WHERE package = ? OR package LIKE ?
+               ORDER BY package, class_name""",
+            (p, f"{pattern}%"),
+        )
+    else:
+        cur = conn.execute(
+            "SELECT package, class_name, kind, file_path FROM classes WHERE package = ? ORDER BY class_name",
+            (p,),
+        )
+    return [
+        {"package": r["package"], "class_name": r["class_name"], "kind": r["kind"], "file_path": r["file_path"]}
+        for r in cur.fetchall()
+    ]
+
+
 def search_fts(
     conn: sqlite3.Connection,
     query_term: str,
     limit: int = 50,
+    package_prefix: str | None = None,
+    kind: str | None = None,
 ) -> list[sqlite3.Row]:
     """
     Busca en la tabla FTS5 api_fts. query_term se pasa a MATCH (sintaxis FTS5).
     JOIN con classes para incluir file_path (ruta relativa al directorio descompilado).
+    package_prefix: opcional; filtra por paquete exacto o prefijo (X o X.%).
+    kind: opcional; filtra por tipo (class, interface, record, enum).
     Devuelve lista de filas (package, class_name, kind, method_name, returns, params, file_path).
     Puede lanzar sqlite3.OperationalError si la sintaxis FTS5 es inválida.
     """
     if not query_term or not query_term.strip():
         return []
     term = query_term.strip()
-    cur = conn.execute(
-        """SELECT api_fts.package, api_fts.class_name, api_fts.kind, api_fts.method_name,
-           api_fts.returns, api_fts.params, c.file_path
-           FROM api_fts JOIN classes c ON c.package = api_fts.package AND c.class_name = api_fts.class_name
-           WHERE api_fts MATCH ? LIMIT ?""",
-        (term, limit),
-    )
+    sql = """SELECT api_fts.package, api_fts.class_name, api_fts.kind, api_fts.method_name,
+             api_fts.returns, api_fts.params, c.file_path
+             FROM api_fts JOIN classes c ON c.package = api_fts.package AND c.class_name = api_fts.class_name
+             WHERE api_fts MATCH ?"""
+    params: list = [term]
+    if package_prefix and package_prefix.strip():
+        p = package_prefix.strip()
+        pattern = p if p.endswith(".") else f"{p}."
+        sql += " AND (c.package = ? OR c.package LIKE ?)"
+        params.extend([p, f"{pattern}%"])
+    if kind and kind.strip():
+        sql += " AND api_fts.kind = ?"
+        params.append(kind.strip().lower())
+    sql += " LIMIT ?"
+    params.append(limit)
+    cur = conn.execute(sql, params)
     return cur.fetchall()

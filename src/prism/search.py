@@ -14,10 +14,13 @@ def search_api(
     version: str = "release",
     query: str = "",
     limit: int = 50,
+    package_prefix: str | None = None,
+    kind: str | None = None,
 ) -> tuple[list[dict], dict | None]:
     """
     Ejecuta búsqueda FTS5 en la DB de la versión indicada.
     Resuelve raíz del proyecto y ruta de la DB; abre/cierra conexión con context manager.
+    package_prefix y kind son filtros opcionales para acotar resultados.
 
     Devuelve:
         (lista de resultados, None) en éxito. Cada resultado es un dict con
@@ -39,7 +42,7 @@ def search_api(
 
     try:
         with db.connection(db_path) as conn:
-            rows = db.search_fts(conn, term, limit=limit)
+            rows = db.search_fts(conn, term, limit=limit, package_prefix=package_prefix, kind=kind)
         results = [
             {
                 "package": r["package"],
