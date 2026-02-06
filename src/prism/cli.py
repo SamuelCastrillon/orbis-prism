@@ -21,6 +21,14 @@ VERSION_FLAG_ALL = ("--all", "-a")
 QUERY_JSON_FLAGS = ("--json", "-j")
 QUERY_LIMIT_FLAGS = ("--limit", "-n")
 
+# Flags para mcp (transporte HTTP)
+MCP_HTTP_FLAGS = ("--http", "-H")
+MCP_PORT_FLAGS = ("--port", "-p")
+MCP_HOST_FLAGS = ("--host",)
+ENV_MCP_TRANSPORT = "MCP_TRANSPORT"
+ENV_MCP_PORT = "MCP_PORT"
+ENV_MCP_HOST = "MCP_HOST"
+
 
 def _parse_query_args(args: list[str]) -> tuple[str | None, str, int, bool]:
     """
@@ -57,6 +65,53 @@ def _parse_query_args(args: list[str]) -> tuple[str | None, str, int, bool]:
     if version not in config.VALID_SERVER_VERSIONS:
         version = "release"
     return (term, version, limit, output_json)
+
+
+def _parse_mcp_args(args: list[str], start_index: int) -> tuple[str, str, int]:
+    """
+    Parsea argumentos del comando mcp (desde args[start_index]).
+    También lee MCP_TRANSPORT, MCP_HOST, MCP_PORT (la CLI tiene prioridad sobre env).
+    Devuelve (transport, host, port). transport: "stdio" | "streamable-http".
+    """
+    transport = "stdio"
+    host = "0.0.0.0"
+    port = 8000
+    env_transport = os.environ.get(ENV_MCP_TRANSPORT, "").strip().lower()
+    if env_transport in ("http", "streamable-http"):
+        transport = "streamable-http"
+    try:
+        port = int(os.environ.get(ENV_MCP_PORT, "8000"))
+        port = max(1, min(port, 65535))
+    except ValueError:
+        pass
+    host = os.environ.get(ENV_MCP_HOST, "0.0.0.0").strip() or "0.0.0.0"
+    i = start_index
+    while i < len(args):
+        a = args[i]
+        if a in MCP_HTTP_FLAGS:
+            transport = "streamable-http"
+            i += 1
+        elif a in MCP_PORT_FLAGS:
+            if i + 1 < len(args):
+                try:
+                    port = int(args[i + 1])
+                    port = max(1, min(port, 65535))
+                except ValueError:
+                    pass
+                i += 2
+            else:
+                i += 1
+        elif a in MCP_HOST_FLAGS:
+            if i + 1 < len(args):
+                host = args[i + 1].strip() or host
+                i += 2
+            else:
+                i += 1
+        elif a.startswith("-"):
+            i += 1
+        else:
+            i += 1
+    return (transport, host, port)
 
 
 def _parse_version_arg(args: list[str], start_index: int) -> tuple[str | None, bool]:
@@ -286,24 +341,34 @@ def cmd_context_use(version_str: str, root: Path | None = None) -> int:
     return 0
 
 
-def cmd_mcp(_root: Path | None = None) -> int:
-    """Inicia el servidor MCP para IA (Fase 3). Bloquea hasta que el cliente desconecte."""
+def cmd_mcp(
+    _root: Path | None = None,
+    transport: str = "stdio",
+    host: str = "0.0.0.0",
+    port: int = 8000,
+) -> int:
+    """Inicia el servidor MCP para IA. Por defecto stdio; con transport streamable-http escucha en host:port."""
     root = _root or config.get_project_root()
     # Solo mostrar instrucciones si stderr es una terminal (ej. usuario ejecutó a mano).
     # Cuando Cursor lanza el proceso por stdio, stderr no es TTY y no imprimimos, para no interferir.
     if sys.stderr.isatty():
-        cwd = str(root.resolve())
-        command = sys.executable
-        args_str = "main.py mcp"
-        print(i18n.t("cli.mcp.instructions_title"), file=sys.stderr)
-        print(i18n.t("cli.mcp.instructions_intro"), file=sys.stderr)
-        print(i18n.t("cli.mcp.instructions_command", command=command), file=sys.stderr)
-        print(i18n.t("cli.mcp.instructions_args", args=args_str), file=sys.stderr)
-        print(i18n.t("cli.mcp.instructions_cwd", cwd=cwd), file=sys.stderr)
-        print(i18n.t("cli.mcp.instructions_ready"), file=sys.stderr)
+        if transport == "streamable-http":
+            print(i18n.t("cli.mcp.instructions_http_title"), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_http_ready", host=host, port=port), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_http_url", url=f"http://{host}:{port}/mcp"), file=sys.stderr)
+        else:
+            cwd = str(root.resolve())
+            command = sys.executable
+            args_str = "main.py mcp"
+            print(i18n.t("cli.mcp.instructions_title"), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_intro"), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_command", command=command), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_args", args=args_str), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_cwd", cwd=cwd), file=sys.stderr)
+            print(i18n.t("cli.mcp.instructions_ready"), file=sys.stderr)
     from . import mcp_server
     try:
-        mcp_server.run()
+        mcp_server.run(transport=transport, host=host, port=port)
         return 0
     except KeyboardInterrupt:
         return 0
@@ -464,7 +529,8 @@ def main() -> int:
             return 1
         return cmd_prune(root, version=version_arg)
     if subcommand == "mcp":
-        return cmd_mcp(root)
+        transport, host, port = _parse_mcp_args(args, 1)
+        return cmd_mcp(root, transport=transport, host=host, port=port)
 
     if subcommand == "context":
         if len(args) < 2:
