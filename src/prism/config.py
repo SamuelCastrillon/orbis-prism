@@ -15,12 +15,14 @@ CORE_PACKAGE_PATH = "com/hypixel/hytale"
 ENV_JAR_PATH = "HYTALE_JAR_PATH"
 ENV_OUTPUT_DIR = "PRISM_OUTPUT_DIR"
 ENV_JADX_PATH = "JADX_PATH"
+ENV_LANG = "PRISM_LANG"
 
 # Nombres de archivo de configuración (raíz del proyecto)
 CONFIG_FILENAME = ".prism.json"
 CONFIG_KEY_JAR_PATH = "jar_path"
 CONFIG_KEY_OUTPUT_DIR = "output_dir"
 CONFIG_KEY_JADX_PATH = "jadx_path"
+CONFIG_KEY_LANG = "lang"
 
 
 def get_project_root() -> Path:

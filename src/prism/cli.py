@@ -1,10 +1,11 @@
-# CLI Orbis Prism: subcomandos init, decompile, index, serve.
+# CLI Orbis Prism: subcomandos init, decompile, index, serve, lang.
 
 import sys
 from pathlib import Path
 
 from . import config
 from . import detection
+from . import i18n
 
 
 def _ensure_dirs(root: Path) -> None:
@@ -27,15 +28,9 @@ def cmd_init(root: Path | None = None) -> int:
 
     jar_path = detection.find_and_validate_jar(root)
     if jar_path is None:
-        print("Error: HytaleServer.jar no encontrado.", file=sys.stderr)
-        print(
-            "  - Define HYTALE_JAR_PATH o coloca el JAR en workspace/server/",
-            file=sys.stderr,
-        )
-        print(
-            "  - En Windows se buscan también rutas en %LOCALAPPDATA%.",
-            file=sys.stderr,
-        )
+        print(i18n.t("cli.init.jar_not_found"), file=sys.stderr)
+        print(i18n.t("cli.init.hint_env"), file=sys.stderr)
+        print(i18n.t("cli.init.hint_windows"), file=sys.stderr)
         return 1
 
     cfg = config.load_config(root)
@@ -43,41 +38,74 @@ def cmd_init(root: Path | None = None) -> int:
     cfg[config.CONFIG_KEY_OUTPUT_DIR] = str(config.get_workspace_dir(root).resolve())
     config.save_config(cfg, root)
 
-    print(f"Listo. JAR detectado: {jar_path}")
-    print(f"Config guardada en: {config.get_config_path(root)}")
+    print(i18n.t("cli.init.success_jar", path=jar_path))
+    print(i18n.t("cli.init.success_config", path=config.get_config_path(root)))
     return 0
 
 
 def cmd_decompile(_root: Path | None = None) -> int:
     """Placeholder: requiere pipeline JADX (Fase 1)."""
-    print("Comando 'decompile' no implementado aún. Ver Fase 1 del plan.", file=sys.stderr)
+    print(i18n.t("cli.decompile.not_implemented"), file=sys.stderr)
     return 1
 
 
 def cmd_index(_root: Path | None = None) -> int:
     """Placeholder: requiere extractor y SQLite (Fase 2)."""
-    print("Comando 'index' no implementado aún. Ver Fase 2 del plan.", file=sys.stderr)
+    print(i18n.t("cli.index.not_implemented"), file=sys.stderr)
     return 1
 
 
 def cmd_serve(_root: Path | None = None) -> int:
     """Placeholder: requiere servidor MCP (Fase 3)."""
-    print("Comando 'serve' no implementado aún. Ver Fase 3 del plan.", file=sys.stderr)
+    print(i18n.t("cli.serve.not_implemented"), file=sys.stderr)
     return 1
 
 
+def cmd_lang_list(root: Path | None = None) -> int:
+    """Lista los idiomas disponibles y marca el actual."""
+    root = root or config.get_project_root()
+    current = i18n.get_current_locale(root)
+    locales = i18n.get_available_locales()
+    print(i18n.t("lang.list.header"))
+    for code, name in locales:
+        if code == current:
+            print(i18n.t("lang.list.current", code=code, name=name))
+        else:
+            print(i18n.t("lang.list.entry", code=code, name=name))
+    return 0
+
+
+def cmd_lang_set(lang_code: str, root: Path | None = None) -> int:
+    """Cambia el idioma guardado en .prism.json."""
+    root = root or config.get_project_root()
+    code = lang_code.strip().lower()
+    if not code:
+        print(i18n.t("lang.set.invalid", lang=lang_code), file=sys.stderr)
+        return 1
+    if not i18n.is_locale_available(code):
+        print(i18n.t("lang.set.invalid", lang=code), file=sys.stderr)
+        return 1
+    cfg = config.load_config(root)
+    cfg[config.CONFIG_KEY_LANG] = code
+    config.save_config(cfg, root)
+    print(i18n.t("lang.set.success", lang=code))
+    return 0
+
+
 def print_help() -> None:
-    print("Orbis Prism - Herramientas para modding de Hytale")
+    print(i18n.t("cli.help.title"))
     print()
-    print("Uso: python main.py <comando>")
+    print(i18n.t("cli.help.usage"))
     print()
-    print("Comandos:")
-    print("  init       Detecta HytaleServer.jar y guarda la configuración.")
-    print("  decompile  Descompila el JAR con JADX y deja solo com.hypixel.hytale.")
-    print("  index      Indexa el código en la base SQLite (FTS5).")
-    print("  serve      Inicia el servidor MCP para IA.")
+    print(i18n.t("cli.help.commands"))
+    print("  init       ", i18n.t("cli.help.init_desc"))
+    print("  decompile  ", i18n.t("cli.help.decompile_desc"))
+    print("  index      ", i18n.t("cli.help.index_desc"))
+    print("  serve      ", i18n.t("cli.help.serve_desc"))
+    print("  lang list   ", i18n.t("cli.help.lang_list_desc"))
+    print("  lang set <código>  ", i18n.t("cli.help.lang_set_desc"))
     print()
-    print("Ejemplo: python main.py init")
+    print(i18n.t("cli.help.example"))
 
 
 def main() -> int:
@@ -99,6 +127,21 @@ def main() -> int:
     if subcommand == "serve":
         return cmd_serve(root)
 
-    print(f"Comando desconocido: {subcommand}", file=sys.stderr)
+    if subcommand == "lang":
+        if len(args) < 2:
+            print_help()
+            return 0
+        sub = args[1].lower()
+        if sub == "list":
+            return cmd_lang_list(root)
+        if sub == "set":
+            if len(args) < 3:
+                print(i18n.t("cli.lang.set_usage"), file=sys.stderr)
+                return 1
+            return cmd_lang_set(args[2], root)
+        print(i18n.t("cli.unknown_command", cmd=f"lang {sub}"), file=sys.stderr)
+        return 1
+
+    print(i18n.t("cli.unknown_command", cmd=subcommand), file=sys.stderr)
     print_help()
     return 1
