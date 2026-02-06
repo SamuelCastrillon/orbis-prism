@@ -1,6 +1,6 @@
 # Guía para agentes: Orbis Prism
 
-Consulta siempre este archivo cuando trabajes en este repositorio para tener contexto del proyecto.
+Consulta siempre este archivo cuando trabajes en este repositorio para tener contexto del proyecto. Para contribuir (estándares, PRs, pruebas), ver [CONTRIBUTING.md](CONTRIBUTING.md). Visión general del proyecto: [README.md](README.md).
 
 ---
 
@@ -46,7 +46,7 @@ Arquitectura por capas (hexagonal):
 - **Búsqueda:** Caso de uso `application.search.search_api`; recibe `ConfigProvider`, `IndexRepository`, root, version, query, limit, etc.
 - **Context list:** Listado de versiones indexadas y activa viene de `application.index_queries.get_context_list(config_provider, root)`; el CLI no debe duplicar esa lógica.
 - **Raíz del proyecto:** Puede venir de `PRISM_WORKSPACE` o inferirse (buscando `main.py` hacia arriba). Los entrypoints y la infra dependen de esa raíz para `.prism.json` y `workspace/`.
-- **Idioma:** Código en inglés (variables, funciones); comentarios y mensajes al usuario en español; commits en español.
+- **Idioma:** Código, comentarios y mensajes de commit en **inglés**. Mensajes al usuario vía i18n en `locales/es.json` y `locales/en.json`. Para estándares de contribución, ver [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

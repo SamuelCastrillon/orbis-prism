@@ -18,6 +18,19 @@
 - **Prism Pipeline:** Descompilación quirúrgica usando JADX, eliminando librerías de terceros y centrándose exclusivamente en `com.hypixel.hytale`.
 - **Deep Indexing:** Genera una base de datos SQLite con búsqueda de texto completo (FTS5) sobre más de 200k firmas de métodos y clases.
 - **AI-Ready (MCP):** Servidor integrado de Model Context Protocol para que agentes como Claude o Cursor naveguen por la API sin alucinaciones.
+- **Multi-language:** El CLI y los mensajes al usuario están disponibles en **español** e **inglés**. Puedes cambiar el idioma en cualquier momento (ver más abajo).
+
+## 🌐 Idioma / Language
+
+Orbis Prism muestra mensajes, ayuda y errores en **español** o **inglés**. El idioma se guarda en la configuración del proyecto.
+
+| Acción | Comando |
+|--------|---------|
+| Ver idiomas disponibles | `python main.py lang list` |
+| Cambiar a inglés | `python main.py lang set en` |
+| Cambiar a español | `python main.py lang set es` |
+
+Tras ejecutar `lang set <código>`, los siguientes mensajes del CLI usarán ese idioma.
 
 ## 🚀 Inicio Rápido
 
@@ -132,6 +145,10 @@ Para exponer el servidor por red (por ejemplo en un contenedor):
 El endpoint MCP en modo HTTP es `http://<host>:<port>/mcp`. Los clientes MCP compatibles con Streamable HTTP pueden conectarse a esa URL.
 
 **Ejemplo mínimo con Docker:** construye una imagen que instale dependencias y ejecute `python main.py mcp --http`, expón el puerto 8000 y conecta tu cliente a `http://<ip-contenedor>:8000/mcp`.
+
+## 🤝 Contribuir
+
+Si quieres contribuir al proyecto, consulta la [Guía de contribución](CONTRIBUTING.md). Para contexto técnico y arquitectura (agentes, desarrollo), ver también [Agents.md](Agents.md).
 
 ## 📜 License
 
