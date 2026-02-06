@@ -55,7 +55,7 @@
 | `prism build [release\|prerelease]` | **Flujo completo:** descompila e indexa (sobrescribe código y DB). Sin argumento: todas las versiones configuradas; con argumento: solo esa. |
 | `prism decompile [release\|prerelease]` | Descompila con JADX y poda a `workspace/decompiled/<version>`. Sin argumento: todas las versiones configuradas. |
 | `prism index [release\|prerelease]` | Indexa el código descompilado en la base SQLite (FTS5). Sin argumento, indexa el contexto activo. |
-| `prism mcp` | Inicia el servidor MCP para conectar tu IA (Fase 3). |
+| `prism mcp` | Inicia el servidor MCP para conectar tu IA (Fase 3). Al ejecutarlo se muestran en consola las instrucciones de conexión. |
 | `prism context list` | Lista los contextos indexados (release/prerelease) y cuál está activo (*). |
 | `prism context use <release\|prerelease>` | Establece el contexto activo (con qué versión de la API trabajas). |
 | `prism lang list` | Lista idiomas disponibles. |
@@ -69,6 +69,18 @@
 - **`/workspace/decompiled_raw/<version>`**: Salida cruda de JADX antes de la poda.
 - **`/workspace/db`**: Bases SQLite por contexto (`prism_api_release.db`, `prism_api_prerelease.db`).
 - **`/bin`**: Binarios de apoyo (JADX, etc.).
+
+## 🔌 Configurar el servidor MCP
+
+El servidor MCP usa **transporte stdio** (no abre ningún puerto). Tu cliente (Cursor, Claude Desktop, etc.) debe ejecutar el proceso y comunicarse por stdin/stdout.
+
+1. **Ejecuta una vez** `python main.py mcp`: en la consola se imprimirán el comando, los argumentos y el directorio de trabajo que debes usar.
+2. **En Cursor**: Settings → MCP → Add new server (o edita la configuración MCP). Añade un servidor con:
+   - **Transport**: stdio
+   - **Command**: la ruta de tu Python (p. ej. `python` o la que mostró el comando)
+   - **Arguments**: `main.py mcp`
+   - **Working directory (cwd)**: la ruta absoluta de la carpeta del proyecto (la que se muestra al ejecutar `prism mcp`)
+3. Reinicia o recarga el cliente MCP para que detecte el tool `prism_search` (búsqueda en la API indexada de Hytale).
 
 ## 📜 License
 This project is licensed under the MIT License. See the `LICENSE` file for more details.

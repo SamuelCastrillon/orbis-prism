@@ -1,8 +1,6 @@
 # Orbis Prism - dependencias mínimas Fase 0/1
 # Fase 2: añadir parser/extracción si se usa librería Java
-# Fase 3: añadir SDK MCP (mcp, etc.)
+# Fase 3: SDK MCP para servidor y tool search_api_symbol
 
-# Sin dependencias externas obligatorias para detección + subprocess
-# Se deja vacío o con dependencias de desarrollo si se desea
-# Ejemplo para futuras fases:
-# orjson>=3.9.0
+# MCP (Model Context Protocol) - servidor para IA
+mcp>=1.0.0

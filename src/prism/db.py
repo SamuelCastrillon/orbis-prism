@@ -127,14 +127,18 @@ def search_fts(
 ) -> list[sqlite3.Row]:
     """
     Busca en la tabla FTS5 api_fts. query_term se pasa a MATCH (sintaxis FTS5).
-    Devuelve lista de filas (package, class_name, kind, method_name, returns, params).
+    JOIN con classes para incluir file_path (ruta relativa al directorio descompilado).
+    Devuelve lista de filas (package, class_name, kind, method_name, returns, params, file_path).
+    Puede lanzar sqlite3.OperationalError si la sintaxis FTS5 es inválida.
     """
     if not query_term or not query_term.strip():
         return []
     term = query_term.strip()
-    # Evitar caracteres que rompen FTS5; para una palabra simple no hace falta
     cur = conn.execute(
-        "SELECT package, class_name, kind, method_name, returns, params FROM api_fts WHERE api_fts MATCH ? LIMIT ?",
+        """SELECT api_fts.package, api_fts.class_name, api_fts.kind, api_fts.method_name,
+           api_fts.returns, api_fts.params, c.file_path
+           FROM api_fts JOIN classes c ON c.package = api_fts.package AND c.class_name = api_fts.class_name
+           WHERE api_fts MATCH ? LIMIT ?""",
         (term, limit),
     )
     return cur.fetchall()
