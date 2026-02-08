@@ -44,7 +44,7 @@ After running `lang set <code>`, subsequent CLI messages will use that language.
 
 ### Initial command (first time)
 
-The command to run when getting started is **`ctx init`** (or `context init`). It detects the Hytale JAR, decompiles, prunes, and indexes the API into SQLite. If the JAR is not detected, run **`ctx detect`** first so Orbis Prism can locate `HytaleServer.jar` and save the configuration to `.prism.json`.
+The command to run when getting started is **`python main.py ctx init`** (or `context init`). It detects the Hytale JAR, decompiles, prunes, and indexes the API into SQLite. If the JAR is not detected, run **`python main.py ctx detect`** first so Orbis Prism can locate `HytaleServer.jar` and save the configuration to `.prism.json`.
 
 ### Where HytaleServer.jar is detected
 

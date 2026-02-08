@@ -90,19 +90,15 @@ def _resolve_context_versions(root: Path, version: str | None) -> list[str] | No
 
 
 def cmd_context_init(root: Path | None = None, version: str | None = None) -> int:
-    """Pipeline completo: detecta JAR si falta → decompile (solo JADX) → prune → db. version=None -> all."""
+    """Pipeline completo: detect (siempre al inicio) → decompile (solo JADX) → prune → db. version=None -> all."""
     root = root or config_impl.get_project_root()
+    # Always run detect first (same as ctx detect) to ensure JAR and config are up to date.
+    if cmd_init(root) != 0:
+        return 1
     versions_list = _resolve_context_versions(root, version)
     if not versions_list:
-        # Intentar detectar el JAR antes de fallar (equivalente a ctx detect)
         print(i18n.t("cli.decompile.no_jar"), file=sys.stderr)
-        print(i18n.t("cli.init.attempting_detect"))
-        if cmd_init(root) != 0:
-            return 1
-        versions_list = _resolve_context_versions(root, version)
-        if not versions_list:
-            print(i18n.t("cli.decompile.no_jar"), file=sys.stderr)
-            return 1
+        return 1
 
     print(i18n.t("cli.build.phase_decompile"))
     print(i18n.t("cli.decompile.may_take"))
