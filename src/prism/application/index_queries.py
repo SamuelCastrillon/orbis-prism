@@ -25,6 +25,15 @@ def get_class(
         return (None, {"error": "no_db", "message": f"Database for version {version} does not exist."})
     data = index_repository.get_class_and_methods(db_path, package, class_name)
     if data is None:
+        # Smart Suggestion: find class by name in other packages
+        from .search import search_api
+        suggestions, _ = search_api(config_provider, index_repository, root, version, class_name, unique_classes=True)
+        if suggestions:
+            message = f"Class {package}.{class_name} not found. Did you mean one of these?\n"
+            for s in suggestions:
+                message += f"- {s['package']}.{s['class_name']}\n"
+            return (None, {"error": "not_found", "message": message, "suggestions": suggestions})
+        
         return (None, {"error": "not_found", "message": f"Class {package}.{class_name} not found."})
     return (data, None)
 

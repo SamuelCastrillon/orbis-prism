@@ -109,6 +109,7 @@
   "mcp.tools.prism_context_list.description": "List indexed server versions (release, prerelease) and the active context. Use to discover what is available before searching.",
   "mcp.tools.prism_index_stats.description": "Return the number of indexed classes and methods for a version. If version is omitted, uses the active context.",
   "mcp.tools.prism_read_source.description": "Read the contents of a decompiled Java source file. file_path is the relative path from the decompiled directory (e.g. from prism_search result). Optional start_line and end_line (1-based) return only that range; response includes total_lines and the requested range.",
-  "mcp.tools.prism_get_method.description": "Get methods of a class that match the given method name (exact match; includes overloads with different params). Returns package, class_name, kind, file_path, and methods list (method, returns, params, is_static, annotation). Use when you need a specific method of a known class.",
-  "mcp.tools.prism_fts_help.description": "Return a short reference for FTS5 search syntax used by prism_search: single word, quoted phrase, AND/OR, prefix, and examples."
+  "mcp.tools.prism_get_method.description": "Gets methods from a class that match the given name (exact match; includes overloads with different params). Returns package, class_name, kind, file_path, and list of methods. Use it when you need a specific method from a known class.",
+  "mcp.tools.prism_get_hierarchy.description": "Gets the hierarchy of a class (parents and interfaces). Helps understand where methods come from without switching files.",
+  "mcp.tools.prism_fts_help.description": "Returns a brief reference for the FTS5 syntax used by prism_search: single word, quoted phrase, AND/OR, prefix, and examples."
 }

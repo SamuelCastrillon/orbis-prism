@@ -30,20 +30,25 @@ def connection(db_path: Path):
 def init_schema(conn: sqlite3.Connection) -> None:
     """
     Crea tablas normales (classes, methods) y la tabla virtual FTS5 para búsqueda.
-    Idempotente: elimina y recrea tablas si existen.
+    Elimina y recrea tablas para asegurar sincronización de esquema.
     """
+    conn.execute("DROP TABLE IF EXISTS methods")
+    conn.execute("DROP TABLE IF EXISTS classes")
+    
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS classes (
+        CREATE TABLE classes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             package TEXT NOT NULL,
             class_name TEXT NOT NULL,
             kind TEXT NOT NULL,
             file_path TEXT NOT NULL,
+            parent TEXT,
+            interfaces TEXT,
             UNIQUE(package, class_name)
         )
     """)
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS methods (
+        CREATE TABLE methods (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             class_id INTEGER NOT NULL,
             method TEXT NOT NULL,
@@ -54,8 +59,8 @@ def init_schema(conn: sqlite3.Connection) -> None:
             FOREIGN KEY (class_id) REFERENCES classes(id)
         )
     """)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_methods_class_id ON methods(class_id)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_classes_package ON classes(package)")
+    conn.execute("CREATE INDEX idx_methods_class_id ON methods(class_id)")
+    conn.execute("CREATE INDEX idx_classes_package ON classes(package)")
 
     conn.execute("DROP TABLE IF EXISTS api_fts")
     conn.execute("""
@@ -80,14 +85,22 @@ def clear_tables(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def insert_class(conn: sqlite3.Connection, package: str, class_name: str, kind: str, file_path: str) -> int:
+def insert_class(conn: sqlite3.Connection, package: str, class_name: str, kind: str, file_path: str, parent: str | None = None, interfaces: str | None = None) -> int:
     """Inserta una clase y devuelve su id. Si (package, class_name) existe, devuelve el id existente."""
     cur = conn.execute(
-        "INSERT OR IGNORE INTO classes (package, class_name, kind, file_path) VALUES (?, ?, ?, ?)",
-        (package, class_name, kind, file_path),
+        "INSERT OR IGNORE INTO classes (package, class_name, kind, file_path, parent, interfaces) VALUES (?, ?, ?, ?, ?, ?)",
+        (package, class_name, kind, file_path, parent, interfaces),
     )
     if cur.lastrowid and cur.lastrowid > 0:
         return cur.lastrowid
+
+    # If already exists, we might need to update parent/interfaces if they were NULL before
+    # (e.g. if we indexed a reference before the actual definition)
+    conn.execute(
+        "UPDATE classes SET parent = ?, interfaces = ?, kind = ?, file_path = ? WHERE package = ? AND class_name = ?",
+        (parent, interfaces, kind, file_path, package, class_name)
+    )
+    
     row = conn.execute(
         "SELECT id FROM classes WHERE package = ? AND class_name = ?",
         (package, class_name),
@@ -141,7 +154,7 @@ def get_class_and_methods(
 ) -> dict | None:
     """Devuelve la clase y todos sus métodos. None si no existe."""
     row = conn.execute(
-        "SELECT id, package, class_name, kind, file_path FROM classes WHERE package = ? AND class_name = ?",
+        "SELECT id, package, class_name, kind, file_path, parent, interfaces FROM classes WHERE package = ? AND class_name = ?",
         (package.strip(), class_name.strip()),
     ).fetchone()
     if row is None:
@@ -166,6 +179,8 @@ def get_class_and_methods(
         "class_name": row["class_name"],
         "kind": row["kind"],
         "file_path": row["file_path"],
+        "parent": row["parent"],
+        "interfaces": row["interfaces"],
         "methods": methods,
     }
 

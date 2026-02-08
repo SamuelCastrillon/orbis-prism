@@ -13,6 +13,7 @@ from ..application import (
     list_classes as app_list_classes,
     read_source as app_read_source,
     search_api as app_search_api,
+    get_hierarchy as app_get_hierarchy,
 )
 from ..domain.constants import normalize_version
 from ..infrastructure.file_config import FileConfigProvider
@@ -74,8 +75,12 @@ def _run_get_class(
         parsed = _parse_fqcn(fqcn)
         if parsed:
             p, c = parsed
-    if not p or not c:
-        return json.dumps({"error": "missing_params", "message": "Provide package and class_name, or fqcn (e.g. com.hypixel.hytale.server.GameManager)."}, ensure_ascii=False)
+        else:
+            c = fqcn.strip() # Treat as simple class name
+    
+    if not c:
+        return json.dumps({"error": "missing_params", "message": "Provide class_name or fqcn."}, ensure_ascii=False)
+    
     data, err = app_get_class(_config_provider, _index_repository, None, version, p, c)
     if err is not None:
         return json.dumps(err, ensure_ascii=False)
@@ -156,6 +161,26 @@ def _run_get_method(version: str, package: str, class_name: str, method_name: st
     return json.dumps({"version": version, **data}, ensure_ascii=False)
 
 
+def _run_get_hierarchy(
+    version: str,
+    package: str | None = None,
+    class_name: str | None = None,
+    fqcn: str | None = None,
+) -> str:
+    version = normalize_version(version)
+    p = (package or "").strip()
+    c = (class_name or "").strip()
+    if (fqcn or "").strip():
+        parsed = _parse_fqcn(fqcn)
+        if parsed:
+            p, c = parsed
+    if not p or not c:
+        return json.dumps({"error": "missing_params", "message": "Provide package and class_name, or fqcn."}, ensure_ascii=False)
+    
+    data = app_get_hierarchy(_config_provider, version, p, c)
+    return json.dumps({"version": version, **data}, ensure_ascii=False)
+
+
 def _register_tools(app: FastMCP) -> None:
     """Register prism_* tools on the given FastMCP instance with localized descriptions."""
 
@@ -232,6 +257,17 @@ def _register_tools(app: FastMCP) -> None:
 
     prism_fts_help.__doc__ = i18n.t("mcp.tools.prism_fts_help.description")
     app.tool()(prism_fts_help)
+
+    def prism_get_hierarchy(
+        version: str,
+        package: str | None = None,
+        class_name: str | None = None,
+        fqcn: str | None = None,
+    ) -> str:
+        return _run_get_hierarchy(version, package=package, class_name=class_name, fqcn=fqcn)
+
+    prism_get_hierarchy.__doc__ = i18n.t("mcp.tools.prism_get_hierarchy.description")
+    app.tool()(prism_get_hierarchy)
 
 
 # Default instance for stdio (host/port unused)

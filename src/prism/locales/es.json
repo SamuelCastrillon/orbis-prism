@@ -110,5 +110,6 @@
   "mcp.tools.prism_index_stats.description": "Devuelve el número de clases y métodos indexados para una versión. Si se omite version, usa el contexto activo.",
   "mcp.tools.prism_read_source.description": "Lee el contenido de un archivo Java descompilado. file_path es la ruta relativa al directorio descompilado (ej. resultado de prism_search). start_line y end_line opcionales (1-based) devuelven solo ese rango; la respuesta incluye total_lines y el rango solicitado.",
   "mcp.tools.prism_get_method.description": "Obtiene los métodos de una clase que coinciden con el nombre dado (coincidencia exacta; incluye sobrecargas con distintos params). Devuelve package, class_name, kind, file_path y lista de methods. Úsalo cuando necesites un método concreto de una clase conocida.",
+  "mcp.tools.prism_get_hierarchy.description": "Obtiene la jerarquía de una clase (padres e interfaces). Ayuda a entender de dónde vienen los métodos sin cambiar de archivo.",
   "mcp.tools.prism_fts_help.description": "Devuelve una referencia breve de la sintaxis FTS5 usada por prism_search: palabra, frase entre comillas, AND/OR, prefijo y ejemplos."
 }
