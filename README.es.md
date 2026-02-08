@@ -15,23 +15,23 @@
 
 ## 📑 Índice
 
-- [✨ Características Principales](#-características-principales)
-- [🌐 Idioma / Language](#-idioma--language)
-- [🚀 Inicio Rápido](#-inicio-rápido)
+- [✨ Características Principales](#características-principales)
+- [🌐 Idioma / Language](#idioma--language)
+- [🚀 Inicio Rápido](#inicio-rápido)
   - [Requisitos](#requisitos)
   - [Comando inicial (primera vez)](#comando-inicial-primera-vez)
   - [Dónde se detecta HytaleServer.jar](#dónde-se-detecta-hytaleserverjar)
   - [Instalación](#instalación)
-- [🛠 Comandos CLI](#-comandos-cli)
-- [📁 Estructura del proyecto](#-estructura-del-proyecto)
-- [🔌 Configurar el servidor MCP](#-configurar-el-servidor-mcp)
+- [🛠 Comandos CLI](#comandos-cli)
+- [📁 Estructura del proyecto](#estructura-del-proyecto)
+- [🔌 Configurar el servidor MCP](#configurar-el-servidor-mcp)
   - [Modo stdio (por defecto)](#modo-stdio-por-defecto)
   - [Modo HTTP / Docker](#modo-http--docker)
-- [📚 Ver también](#-ver-también)
-- [🤝 Contribuir](#-contribuir)
-- [📜 License](#-license)
+- [📚 Ver también](#ver-también)
+- [🤝 Contribuir](#contribuir)
+- [📜 License](#license)
 
-## ✨ Características Principales
+## Características Principales
 
 - **Auto-Detection:** Localiza la instalación oficial en Windows (`%APPDATA%\Hytale\install\...\Server`). Puedes sobrescribir la ruta con `python main.py config_impl set game_path <ruta>`.
 - **Prism Pipeline:** Descompilación quirúrgica usando JADX, eliminando librerías de terceros y centrándose exclusivamente en `com.hypixel.hytale`.
@@ -39,7 +39,7 @@
 - **AI-Ready (MCP):** Servidor integrado de Model Context Protocol para que agentes como Claude o Cursor naveguen por la API sin alucinaciones.
 - **Multi-language:** El CLI y los mensajes al usuario están disponibles en **español** e **inglés**. Puedes cambiar el idioma en cualquier momento (ver más abajo).
 
-## 🌐 Idioma / Language
+## Idioma / Language
 
 Orbis Prism muestra mensajes, ayuda y errores en **español** o **inglés**. El idioma se guarda en la configuración del proyecto.
 
@@ -51,7 +51,7 @@ Orbis Prism muestra mensajes, ayuda y errores en **español** o **inglés**. El 
 
 Tras ejecutar `lang set <código>`, los siguientes mensajes del CLI usarán ese idioma.
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
 
 ### Requisitos
 
@@ -99,13 +99,13 @@ El comando que debes ejecutar al empezar es **`python main.py ctx init`** (o `co
      ```
      Luego vuelve a ejecutar `python main.py ctx init`.
 
-## 🛠 Comandos CLI
+## Comandos CLI
 
 El comando **inicial** recomendado es **`python main.py ctx init`** (o `context init`): ejecuta la detección al inicio, luego descompila, poda e indexa. Puedes usar `ctx` como abreviatura de `context`.
 
-| Comando                                                     | Descripción                                                                                                     |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `python main.py ctx init [release\|prerelease\|--all]`      | **Comando inicial.** Pipeline completo: ejecuta detect, luego descompila (JADX), poda e indexa en SQLite.      |
+| Comando                                                     | Descripción                                                                                               |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `python main.py ctx init [release\|prerelease\|--all]`      | **Comando inicial.** Pipeline completo: ejecuta detect, luego descompila (JADX), poda e indexa en SQLite. |
 | `python main.py ctx detect`                                 | Detecta HytaleServer.jar (y release/prerelease si existen) y guarda la configuración en `.prism.json`.    |
 | `python main.py ctx clean <db\|build\|all>`                 | Limpia: `db` (solo bases de datos), `build` (decompilado), `all` (todo).                                  |
 | `python main.py ctx reset`                                  | Deja el proyecto a cero (borra DB, build y `.prism.json`).                                                |
@@ -122,7 +122,7 @@ El comando **inicial** recomendado es **`python main.py ctx init`** (o `context 
 
 Para una **documentación más detallada del CLI** (argumentos, flujos, estructura del código y descripción de cada subcomando), ver [Documentación del CLI](src/prism/entrypoints/cli/README.md).
 
-## 📁 Estructura del proyecto
+## Estructura del proyecto
 
 - **`/src`**: Código fuente del orquestador (Python).
 - **`/workspace/decompiled/<version>`**: Código limpio del núcleo Hytale por versión (`release`, `prerelease`).
@@ -130,7 +130,7 @@ Para una **documentación más detallada del CLI** (argumentos, flujos, estructu
 - **`/workspace/db`**: Bases SQLite por contexto (`prism_api_release.db`, `prism_api_prerelease.db`).
 - **`/bin`**: Binarios de apoyo (JADX, etc.).
 
-## 🔌 Configurar el servidor MCP
+## Configurar el servidor MCP
 
 Por defecto el servidor usa **transporte stdio** (no abre ningún puerto). Tu cliente (Cursor, Claude Desktop, etc.) ejecuta el proceso y se comunica por stdin/stdout. Opcionalmente puedes usar **transporte HTTP** para despliegue remoto o en Docker.
 
@@ -169,16 +169,16 @@ El endpoint MCP en modo HTTP es `http://<host>:<port>/mcp`. Los clientes MCP com
 
 **Ejemplo mínimo con Docker:** construye una imagen que instale dependencias y ejecute `python main.py mcp --http`, expón el puerto 8000 y conecta tu cliente a `http://<ip-contenedor>:8000/mcp`.
 
-## 📚 Ver también
+## Ver también
 
 - [Documentación del CLI](src/prism/entrypoints/cli/README.md) — argumentos, flujos y subcomandos detallados.
 - [AGENTS.md](AGENTS.md) — contexto técnico y arquitectura para contribuidores y agentes.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — cómo contribuir al proyecto.
 
-## 🤝 Contribuir
+## Contribuir
 
 Si quieres contribuir al proyecto, consulta la [Guía de contribución](CONTRIBUTING.md). Para contexto técnico y arquitectura (agentes, desarrollo), ver también [AGENTS.md](AGENTS.md).
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for more details.

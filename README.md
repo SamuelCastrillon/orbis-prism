@@ -15,23 +15,23 @@
 
 ## 📑 Contents
 
-- [✨ Main features](#-main-features)
-- [🌐 Language / Idioma](#-language--idioma)
-- [🚀 Quick start](#-quick-start)
+- [Main features](#main-features)
+- [Language / Idioma](#language--idioma)
+- [🚀 Quick start](#quick-start)
   - [Requirements](#requirements)
   - [Initial command (first time)](#initial-command-first-time)
   - [Where HytaleServer.jar is detected](#where-hytaleserverjar-is-detected)
   - [Installation](#installation)
-- [🛠 CLI commands](#-cli-commands)
-- [📁 Project structure](#-project-structure)
-- [🔌 Configuring the MCP server](#-configuring-the-mcp-server)
+- [CLI commands](#cli-commands)
+- [📁 Project structure](#project-structure)
+- [🔌 Configuring the MCP server](#configuring-the-mcp-server)
   - [stdio mode (default)](#stdio-mode-default)
   - [HTTP / Docker mode](#http--docker-mode)
-- [📚 See also](#-see-also)
-- [🤝 Contributing](#-contributing)
-- [📜 License](#-license)
+- [📚 See also](#see-also)
+- [🤝 Contributing](#contributing)
+- [📜 License](#license)
 
-## ✨ Main features
+## Main features
 
 - **Auto-detection:** Locates the official installation on Windows (`%APPDATA%\Hytale\install\...\Server`). You can override the path with `python main.py config_impl set game_path <path>`.
 - **Prism pipeline:** Surgical decompilation using JADX, removing third-party libraries and focusing exclusively on `com.hypixel.hytale`.
@@ -39,7 +39,7 @@
 - **AI-ready (MCP):** Integrated Model Context Protocol server so agents like Claude or Cursor can navigate the API without hallucinations.
 - **Multi-language:** The CLI and user messages are available in **Spanish** and **English**. You can change the language at any time (see below).
 
-## 🌐 Language / Idioma
+## Language / Idioma
 
 Orbis Prism shows messages, help, and errors in **Spanish** or **English**. The language is stored in the project configuration.
 
@@ -51,7 +51,7 @@ Orbis Prism shows messages, help, and errors in **Spanish** or **English**. The 
 
 After running `lang set <code>`, subsequent CLI messages will use that language.
 
-## 🚀 Quick start
+## Quick start
 
 ### Requirements
 
@@ -103,26 +103,26 @@ The command to run when getting started is **`python main.py ctx init`** (or `co
 
 The recommended **initial** command is **`python main.py ctx init`** (or `context init`): it runs detect at the start, then decompiles, prunes, and indexes. You can use `ctx` as a shorthand for `context`.
 
-| Command                                                     | Description                                                                                                        |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `python main.py ctx init [release\|prerelease\|--all]`      | **Initial command.** Full pipeline: runs detect, then decompiles (JADX), prunes, and indexes to SQLite.             |
-| `python main.py ctx detect`                                 | Detects HytaleServer.jar (and release/prerelease if present) and saves configuration to `.prism.json`.        |
-| `python main.py ctx clean <db\|build\|all>`                 | Clean: `db` (databases only), `build` (decompiled output), `all` (everything).                                |
-| `python main.py ctx reset`                                  | Resets the project to zero (removes DB, build, and `.prism.json`).                                            |
-| `python main.py ctx decompile [release\|prerelease\|--all]` | JADX only → `workspace/decompiled_raw/<version>`.                                                             |
-| `python main.py ctx prune [release\|prerelease\|--all]`     | Prune: copies only `com.hypixel.hytale` from raw to decompiled.                                               |
-| `python main.py ctx db [release\|prerelease\|--all]`        | Indexes the code into SQLite (FTS5).                                                                          |
-| `python main.py ctx list`                                   | Lists indexed contexts (release/prerelease) and which is active (\*).                                         |
-| `python main.py ctx use <release\|prerelease>`              | Sets the active context.                                                                                      |
-| `python main.py query <term> [release\|prerelease]`         | Searches the indexed DB (FTS5).                                                                               |
-| `python main.py mcp [--http] [--port N] [--host DIR]`       | Starts the MCP server. stdio by default; with `--http` exposes HTTP on the port (default 8000).               |
-| `python main.py lang list`                                  | Lists available languages.                                                                                    |
-| `python main.py lang set <code>`                            | Changes the language (e.g. `lang set en`).                                                                    |
-| `python main.py config_impl set game_path <path>`           | Sets the game path (root folder or JAR). Launcher → Settings → Open Directory.                                |
+| Command                                                     | Description                                                                                             |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `python main.py ctx init [release\|prerelease\|--all]`      | **Initial command.** Full pipeline: runs detect, then decompiles (JADX), prunes, and indexes to SQLite. |
+| `python main.py ctx detect`                                 | Detects HytaleServer.jar (and release/prerelease if present) and saves configuration to `.prism.json`.  |
+| `python main.py ctx clean <db\|build\|all>`                 | Clean: `db` (databases only), `build` (decompiled output), `all` (everything).                          |
+| `python main.py ctx reset`                                  | Resets the project to zero (removes DB, build, and `.prism.json`).                                      |
+| `python main.py ctx decompile [release\|prerelease\|--all]` | JADX only → `workspace/decompiled_raw/<version>`.                                                       |
+| `python main.py ctx prune [release\|prerelease\|--all]`     | Prune: copies only `com.hypixel.hytale` from raw to decompiled.                                         |
+| `python main.py ctx db [release\|prerelease\|--all]`        | Indexes the code into SQLite (FTS5).                                                                    |
+| `python main.py ctx list`                                   | Lists indexed contexts (release/prerelease) and which is active (\*).                                   |
+| `python main.py ctx use <release\|prerelease>`              | Sets the active context.                                                                                |
+| `python main.py query <term> [release\|prerelease]`         | Searches the indexed DB (FTS5).                                                                         |
+| `python main.py mcp [--http] [--port N] [--host DIR]`       | Starts the MCP server. stdio by default; with `--http` exposes HTTP on the port (default 8000).         |
+| `python main.py lang list`                                  | Lists available languages.                                                                              |
+| `python main.py lang set <code>`                            | Changes the language (e.g. `lang set en`).                                                              |
+| `python main.py config_impl set game_path <path>`           | Sets the game path (root folder or JAR). Launcher → Settings → Open Directory.                          |
 
 For **detailed CLI documentation** (arguments, flows, code structure, and description of each subcommand), see [CLI documentation](src/prism/entrypoints/cli/README.md).
 
-## 📁 Project structure
+## Project structure
 
 - **`/src`**: Source code of the orchestrator (Python).
 - **`/workspace/decompiled/<version>`**: Clean Hytale core code per version (`release`, `prerelease`).
@@ -130,7 +130,7 @@ For **detailed CLI documentation** (arguments, flows, code structure, and descri
 - **`/workspace/db`**: SQLite databases per context (`prism_api_release.db`, `prism_api_prerelease.db`).
 - **`/bin`**: Support binaries (JADX, etc.).
 
-## 🔌 Configuring the MCP server
+## Configuring the MCP server
 
 By default the server uses **stdio transport** (no port is opened). Your client (Cursor, Claude Desktop, etc.) runs the process and communicates via stdin/stdout. Optionally you can use **HTTP transport** for remote or Docker deployment.
 
@@ -169,16 +169,16 @@ The MCP endpoint in HTTP mode is `http://<host>:<port>/mcp`. MCP clients that su
 
 **Minimal Docker example:** build an image that installs dependencies and runs `python main.py mcp --http`, expose port 8000, and connect your client to `http://<container-ip>:8000/mcp`.
 
-## 📚 See also
+## See also
 
 - [CLI documentation](src/prism/entrypoints/cli/README.md) — detailed arguments, flows, and subcommands.
 - [AGENTS.md](AGENTS.md) — technical context and architecture for contributors and agents.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to contribute to the project.
 
-## 🤝 Contributing
+## Contributing
 
 If you want to contribute, see the [Contributing guide](CONTRIBUTING.md). For technical context and architecture (agents, development), see also [AGENTS.md](AGENTS.md).
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
