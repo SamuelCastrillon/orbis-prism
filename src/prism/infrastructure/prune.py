@@ -37,7 +37,7 @@ def prune_to_core(raw_dir: Path, dest_dir: Path) -> tuple[bool, dict | None]:
         shutil.rmtree(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
     all_files = [p for p in source_core.rglob("*") if p.is_file()]
-    for src in tqdm(all_files, unit=" files", desc="Pruning", file=sys.stderr):
+    for src in tqdm(all_files, unit=" files", desc="Pruning", file=sys.stderr, colour="blue"):
         rel = src.relative_to(source_core)
         tgt = target / rel
         tgt.parent.mkdir(parents=True, exist_ok=True)

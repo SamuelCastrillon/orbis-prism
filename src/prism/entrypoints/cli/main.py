@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+import colorama
+
 from ... import i18n
 from ...infrastructure import config_impl
 
@@ -16,6 +18,7 @@ from . import mcp_cmd
 
 def main() -> int:
     """Punto de entrada del CLI."""
+    colorama.init()
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help"):
         cli_help.print_help()

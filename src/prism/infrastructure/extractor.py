@@ -74,7 +74,7 @@ def run_index(root: Path | None = None, version: str = "release") -> tuple[bool,
             db.init_schema(conn)
             db.clear_tables(conn)
             files_processed = 0
-            for jpath in tqdm(java_files, unit=" files", desc="Indexing", file=sys.stderr):
+            for jpath in tqdm(java_files, unit=" files", desc="Indexing", file=sys.stderr, colour="green"):
                 try:
                     content = jpath.read_text(encoding="utf-8", errors="replace")
                 except OSError:

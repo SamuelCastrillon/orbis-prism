@@ -60,6 +60,7 @@ def run_jadx(
             desc="Decompiling",
             dynamic_ncols=True,
             file=sys.stderr,
+            colour="cyan",
         )
         try:
             for line in proc.stdout:

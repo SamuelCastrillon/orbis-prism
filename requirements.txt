@@ -1,3 +1,4 @@
 # MCP (Model Context Protocol) - servidor para IA
 mcp>=1.0.0
 tqdm>=4.66.0
+colorama>=0.4.6
