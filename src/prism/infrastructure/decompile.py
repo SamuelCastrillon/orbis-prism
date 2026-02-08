@@ -1,13 +1,19 @@
 # Decompilation pipeline: JADX.
 
+import re
 import sys
 import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from tqdm import tqdm
+
 from . import config_impl
 from . import detection
 from . import prune
+
+# JADX progress line e.g. "INFO  - progress: 44591 of 46688 (95%)"
+JADX_PROGRESS_RE = re.compile(r"progress:\s*(\d+)\s+of\s+(\d+)\s+\((\d+)%\)")
 
 
 def run_jadx(
@@ -18,7 +24,8 @@ def run_jadx(
 ) -> tuple[bool, bool]:
     """
     Run JADX on the JAR and write output to out_dir.
-    Shows stdout/stderr in real time; if log_path is given, saves to log.
+    Shows a tqdm progress bar for JADX progress lines; other lines (e.g. errors) go to stderr.
+    If log_path is given, every line is saved to the log file.
     Returns (True, had_errors): True if it finished (even with errors); had_errors if exit code != 0.
     (False, False) if an exception occurred (timeout, OSError).
     """
@@ -47,15 +54,34 @@ def run_jadx(
             log_file = open(log_path, "w", encoding="utf-8")
             log_file.write(f"Command: {' '.join(cmd)}\n\n")
 
+        pbar = tqdm(
+            total=None,
+            unit=" files",
+            desc="Decompiling",
+            dynamic_ncols=True,
+            file=sys.stderr,
+            colour="cyan",
+        )
         try:
             for line in proc.stdout:
-                sys.stdout.write(line)
-                sys.stdout.flush()
                 if log_file:
                     log_file.write(line)
                     log_file.flush()
+                match = JADX_PROGRESS_RE.search(line)
+                if match:
+                    current, total, _pct = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                    if pbar.total is None:
+                        pbar.total = total
+                        pbar.refresh()
+                    pbar.n = current
+                    pbar.refresh()
+                else:
+                    pbar.clear()
+                    sys.stderr.write(line)
+                    sys.stderr.flush()
         finally:
             proc.wait(timeout=600)
+            pbar.close()
             if log_file:
                 log_file.write(f"\n--- exit code: {proc.returncode} ---\n")
                 log_file.close()

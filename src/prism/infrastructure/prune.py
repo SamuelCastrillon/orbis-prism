@@ -4,6 +4,8 @@ import sys
 import shutil
 from pathlib import Path
 
+from tqdm import tqdm
+
 from . import config_impl
 
 # Subdirectories where JADX may leave sources (version-dependent)
@@ -34,7 +36,12 @@ def prune_to_core(raw_dir: Path, dest_dir: Path) -> tuple[bool, dict | None]:
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(source_core, target)
+    all_files = [p for p in source_core.rglob("*") if p.is_file()]
+    for src in tqdm(all_files, unit=" files", desc="Pruning", file=sys.stderr, colour="blue"):
+        rel = src.relative_to(source_core)
+        tgt = target / rel
+        tgt.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, tgt)
     # Count only .java files for the log
     file_count = sum(1 for _ in source_core.rglob("*.java"))
     return (True, {"files": file_count, "source_subdir": source_subdir})
