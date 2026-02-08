@@ -1,7 +1,10 @@
 # API extractor from decompiled Java code (regex). Feeds SQLite + FTS5.
 
 import re
+import sys
 from pathlib import Path
+
+from tqdm import tqdm
 
 from . import config_impl
 from . import db
@@ -71,7 +74,7 @@ def run_index(root: Path | None = None, version: str = "release") -> tuple[bool,
             db.init_schema(conn)
             db.clear_tables(conn)
             files_processed = 0
-            for jpath in java_files:
+            for jpath in tqdm(java_files, unit=" files", desc="Indexing", file=sys.stderr):
                 try:
                     content = jpath.read_text(encoding="utf-8", errors="replace")
                 except OSError:
